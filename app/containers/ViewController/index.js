@@ -4,7 +4,7 @@
  *
  */
 
-import React, { createRef, useCallback, useRef, useState } from 'react';
+import React, { createRef, useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, View, TouchableWithoutFeedback, SafeAreaView } from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -31,18 +31,57 @@ const FLASH_IMAGES = {
   on: images.flashOn,
 };
 
+const CONTROL_STEP = {
+  UPLOAD: 'upload',
+  ROTATE: 'rotate',
+};
+
 export function Home(props) {
+  // Global
+  const [controlStep, setControlStep] = useState(CONTROL_STEP.UPLOAD);
+  const [pictureInfo, setPictureInfo] = useState({
+    rotate: 0,
+    uri: '',
+  });
+  const [controlTooltipInfo, setControlTooltipInfo] = useState({
+    image: images.tutShoot,
+    style: styles.tutShootTip,
+  });
+
+  // In Upload Step
   const [takingPicture, setTakingPicture] = useState(false);
   const [flashType, setFlashType] = useState(FLASH_TYPE.AUTO);
   const [cameraType, setCameraType] = useState(CAMERA_TYPE.FRONT);
-  const [footerLeftBtnImg, setFooterLeftBtnImg] = useState(images.buttonCancel);
-  const [footerRightBtnImg, setFooterRightBtnImg] = useState(images.buttonUpload);
-  const [pictureUri, setPictureUri] = useState('');
 
-  const cameraEleRef = createRef();
+  // Footer Control Buttons
+  const [footerLeftBtnImg, setFooterLeftBtnImg] = useState(images.buttonCancel);
+  const [footerControlBtn, setFooterControlBtn] = useState({
+    image: images.buttonCamera,
+    style: styles.cameraImage,
+  });
+  const [footerRightBtnImg, setFooterRightBtnImg] = useState(images.buttonUpload);
+
+  let cameraEleRef = createRef();
 
   const slide2LeftAnim = useRef(new Animated.Value(deviceWitdh + 50)).current;
   const slide2RightAnim = useRef(new Animated.Value(-(deviceWitdh + 150))).current;
+
+  useEffect(() => {
+    switch (controlStep) {
+      case CONTROL_STEP.UPLOAD:
+        break;
+      case CONTROL_STEP.ROTATE:
+        setControlTooltipInfo(null);
+        setFooterControlBtn({
+          image: images.rotate,
+          style: images.rotateImage,
+        });
+        setFooterRightBtnImg(images.buttonUse);
+        break;
+      default:
+        break;
+    }
+  }, [controlStep]);
 
   const changeFlashType = useCallback(() => {
     if (flashType === FLASH_TYPE.AUTO) {
@@ -62,6 +101,37 @@ export function Home(props) {
     }
   }, [cameraType]);
 
+  const gotoNextStep = useCallback(() => {
+    switch (controlStep) {
+      case CONTROL_STEP.UPLOAD:
+        uploadPictureFromGallery();
+        break;
+      case CONTROL_STEP.ROTATE:
+
+      default:
+        break;
+    }
+  }, [controlStep, pictureInfo]);
+
+  const handleControlBtnClicked = useCallback(() => {
+    switch (controlStep) {
+      case CONTROL_STEP.UPLOAD:
+        if (!takingPicture) {
+          takePicture();
+        }
+        break;
+      case CONTROL_STEP.ROTATE:
+        setPictureInfo({
+          ...pictureInfo,
+          rotate: (pictureInfo.rotate + 90) % 360,
+        });
+        break;
+      default:
+        break;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controlStep, pictureInfo, takingPicture]);
+
   // take a picture by camera
   const takePicture = async () => {
     if (cameraEleRef) {
@@ -76,9 +146,12 @@ export function Home(props) {
         duration: 500,
         useNativeDriver: false,
       }).start();
-      // const options = { quality: 0.5, base64: true };
-      // const data = await cameraEleRef.takePictureAsync(options);
+
+      const options = { quality: 0.5, base64: true };
+      const data = await cameraEleRef.takePictureAsync(options);
+      setPictureInfo({ rotate: 0, uri: data.uri });
       // console.log(data.uri);
+
       setTimeout(() => {
         setTakingPicture(false);
         Animated.timing(slide2RightAnim, {
@@ -91,6 +164,8 @@ export function Home(props) {
           duration: 500,
           useNativeDriver: false,
         }).start();
+
+        setControlStep(CONTROL_STEP.ROTATE);
       }, 1500);
     }
   };
@@ -114,10 +189,11 @@ export function Home(props) {
         console.log('ImagePicker Error: ', res.error);
       } else if (res.customButton) {
         console.log('User tapped custom button: ', res.customButton);
-        alert(res.customButton);
+        // alert(res.customButton);
       } else {
         let source = res;
-        setPictureUri(source.uri);
+        setPictureInfo({ rotate: 0, uri: source.uri });
+        setControlStep(CONTROL_STEP.ROTATE);
       }
     });
   };
@@ -132,48 +208,73 @@ export function Home(props) {
 
       {/*   Content   */}
       <View>
-        {/*   Camera Controls   */}
-        <View style={styles.cameraControls}>
-          <TouchableWithoutFeedback onPress={changeFlashType}>
-            <Image source={FLASH_IMAGES[flashType]} resizeMode="contain" style={styles.flashType} />
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback onPress={changeCameraType}>
-            <Image source={images.flip} resizeMode="contain" style={styles.cameraType} />
-          </TouchableWithoutFeedback>
-        </View>
+        {controlStep === CONTROL_STEP.UPLOAD && (
+          <View>
+            {/*   Camera Controls   */}
+            <View style={styles.cameraControls}>
+              <TouchableWithoutFeedback onPress={changeFlashType}>
+                <Image source={FLASH_IMAGES[flashType]} resizeMode="contain" style={styles.flashType} />
+              </TouchableWithoutFeedback>
+              <TouchableWithoutFeedback onPress={changeCameraType}>
+                <Image source={images.flip} resizeMode="contain" style={styles.cameraType} />
+              </TouchableWithoutFeedback>
+            </View>
 
-        <View style={styles.cameraPreviewWrapper}>
-          <View style={styles.cameraPreviewContainer}>
-            {/*   Camera Preview   */}
-            <RNCamera
-              ref={(ref) => {
-                this.cameraEleRef = ref;
-              }}
-              style={styles.cameraPreview}
-              type={RNCamera.Constants.Type[cameraType]}
-              flashMode={RNCamera.Constants.FlashMode[flashType]}
-            />
+            <View style={styles.cameraPreviewWrapper}>
+              <View style={styles.cameraPreviewContainer}>
+                {/*   Camera Preview   */}
+                <RNCamera
+                  ref={(ref) => {
+                    cameraEleRef = ref;
+                  }}
+                  style={styles.cameraPreview}
+                  type={RNCamera.Constants.Type[cameraType]}
+                  flashMode={RNCamera.Constants.FlashMode[flashType]}
+                />
 
-            {/*   Taking a Picture Animation   */}
-            <View style={styles.takingPicture}>
-              <Animated.View style={{ ...styles.takingPictureGreen, marginLeft: slide2RightAnim }}>
-                <View style={styles.takingPictureGreenHide}>
-                  <Image source={images.bigGreen} style={styles.takingPictureGreen} />
+                {/*   Taking a Picture Animation   */}
+                <View style={styles.takingPicture}>
+                  <Animated.View style={{ ...styles.takingPictureGreen, marginLeft: slide2RightAnim }}>
+                    <View style={styles.takingPictureGreenHide}>
+                      <Image source={images.bigGreen} style={styles.takingPictureGreen} />
+                    </View>
+                  </Animated.View>
+                  <Animated.View style={{ ...styles.takingPictureOrange, marginLeft: slide2LeftAnim }}>
+                    <View style={styles.takingPictureOrangeHide}>
+                      <Image source={images.bigOrange} style={styles.takingPictureOrange} />
+                    </View>
+                  </Animated.View>
                 </View>
-              </Animated.View>
-              <Animated.View style={{ ...styles.takingPictureOrange, marginLeft: slide2LeftAnim }}>
-                <View style={styles.takingPictureOrangeHide}>
-                  <Image source={images.bigOrange} style={styles.takingPictureOrange} />
-                </View>
-              </Animated.View>
+              </View>
             </View>
           </View>
-        </View>
+        )}
+
+        {controlStep === CONTROL_STEP.ROTATE && (
+          <View>
+            {/*   Image Preview   */}
+            {pictureInfo && (
+              <View
+                style={{
+                  ...styles.imagePreviewWrapper,
+                  transform: [{ rotate: `${pictureInfo.rotate}deg` }],
+                }}>
+                <Image
+                  source={{ isStatic: true, uri: pictureInfo.uri }}
+                  resizeMode="contain"
+                  style={styles.imagePreview}
+                />
+              </View>
+            )}
+          </View>
+        )}
       </View>
 
       {/*   Footer   */}
       <View style={styles.footer}>
-        <Image source={images.tutShoot} resizeMode="contain" style={styles.tipImage} />
+        {controlTooltipInfo && (
+          <Image source={controlTooltipInfo.image} resizeMode="contain" style={controlTooltipInfo.style} />
+        )}
 
         <View style={styles.btnsGroupWrapper}>
           <View style={styles.footerBtnWrapper}>
@@ -182,12 +283,12 @@ export function Home(props) {
             </TouchableWithoutFeedback>
           </View>
           <View style={styles.footerBtnWrapper}>
-            <TouchableWithoutFeedback onPress={() => takePicture()}>
-              <Image source={images.buttonCamera} resizeMode="contain" style={styles.cameraImage} />
+            <TouchableWithoutFeedback onPress={() => handleControlBtnClicked()}>
+              <Image source={footerControlBtn.image} resizeMode="contain" style={footerControlBtn.style} />
             </TouchableWithoutFeedback>
           </View>
           <View style={styles.footerBtnWrapper}>
-            <TouchableWithoutFeedback onPress={uploadPictureFromGallery}>
+            <TouchableWithoutFeedback onPress={() => gotoNextStep()}>
               <Image source={footerRightBtnImg} resizeMode="contain" style={styles.buttonImage} />
             </TouchableWithoutFeedback>
           </View>

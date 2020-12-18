@@ -10,6 +10,14 @@ export const styles = StyleSheet.create({
     height: deviceHeight,
   },
 
+  // Common
+  hide: {
+    display: 'none',
+  },
+  show: {
+    display: 'flex',
+  },
+
   // Header
   logo: {
     width: deviceWitdh,
@@ -71,6 +79,15 @@ export const styles = StyleSheet.create({
     height: deviceWitdh * 1.3,
     marginTop: -deviceWitdh * 0.7,
   },
+  imagePreviewWrapper: {
+    width: deviceWitdh,
+    height: deviceWitdh,
+    marginTop: 30,
+  },
+  imagePreview: {
+    width: deviceWitdh,
+    height: deviceWitdh,
+  },
 
   // Footer
   footer: {
@@ -83,12 +100,14 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
   },
-  tipImage: {
+  // Tip
+  tutShootTip: {
     width: deviceWitdh,
     height: 60,
     marginLeft: 100,
     marginBottom: -10,
   },
+  // Control Buttons
   btnsGroupWrapper: {
     display: 'flex',
     flexDirection: 'row',

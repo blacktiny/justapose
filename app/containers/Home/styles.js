@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
-    bottom: 40,
+    bottom: 30,
   },
   cameraImage: {
     width: 200,
