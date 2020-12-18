@@ -4,13 +4,15 @@
  *
  */
 
-import React, { createRef, useCallback, useState } from 'react';
-import { View, TouchableWithoutFeedback, SafeAreaView, Image } from 'react-native';
+import React, { createRef, useCallback, useRef, useState } from 'react';
+import { Animated, Dimensions, Image, View, TouchableWithoutFeedback, SafeAreaView } from 'react-native';
 import { RNCamera } from 'react-native-camera';
-import ImagePicker from 'react-native-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 import images from 'images';
 import { styles } from './styles';
+
+const deviceWitdh = Dimensions.get('window').width;
 
 const FLASH_TYPE = {
   AUTO: 'auto',
@@ -39,6 +41,9 @@ export function Home(props) {
 
   const cameraEleRef = createRef();
 
+  const slide2LeftAnim = useRef(new Animated.Value(deviceWitdh + 50)).current;
+  const slide2RightAnim = useRef(new Animated.Value(-(deviceWitdh + 150))).current;
+
   const changeFlashType = useCallback(() => {
     if (flashType === FLASH_TYPE.AUTO) {
       setFlashType(FLASH_TYPE.OFF);
@@ -61,12 +66,32 @@ export function Home(props) {
   const takePicture = async () => {
     if (cameraEleRef) {
       setTakingPicture(true);
-      const options = { quality: 0.5, base64: true };
-      const data = await cameraEleRef.takePictureAsync(options);
-      console.log(data.uri);
+      Animated.timing(slide2RightAnim, {
+        toValue: -(deviceWitdh / 2 - 50),
+        duration: 500,
+        useNativeDriver: false,
+      }).start();
+      Animated.timing(slide2LeftAnim, {
+        toValue: deviceWitdh / 2 - 50,
+        duration: 500,
+        useNativeDriver: false,
+      }).start();
+      // const options = { quality: 0.5, base64: true };
+      // const data = await cameraEleRef.takePictureAsync(options);
+      // console.log(data.uri);
       setTimeout(() => {
         setTakingPicture(false);
-      }, 3000);
+        Animated.timing(slide2RightAnim, {
+          toValue: -(deviceWitdh + 150),
+          duration: 500,
+          useNativeDriver: false,
+        }).start();
+        Animated.timing(slide2LeftAnim, {
+          toValue: deviceWitdh + 50,
+          duration: 500,
+          useNativeDriver: false,
+        }).start();
+      }, 1500);
     }
   };
 
@@ -80,7 +105,7 @@ export function Home(props) {
       },
     };
 
-    ImagePicker.showImagePicker(options, (res) => {
+    launchImageLibrary(options, (res) => {
       console.log('Response = ', res);
 
       if (res.didCancel) {
@@ -118,24 +143,31 @@ export function Home(props) {
         </View>
 
         <View style={styles.cameraPreviewWrapper}>
-          <View style={styles.takingPicture}>
-            <View style={styles.takingPictureGreenHide}>
-              <Image source={images.bigGreen} style={styles.takingPictureGreen} />
-            </View>
-            <View style={styles.takingPictureOrangeHide}>
-              <Image source={images.bigOrange} style={styles.takingPictureOrange} />
+          <View style={styles.cameraPreviewContainer}>
+            {/*   Camera Preview   */}
+            <RNCamera
+              ref={(ref) => {
+                this.cameraEleRef = ref;
+              }}
+              style={styles.cameraPreview}
+              type={RNCamera.Constants.Type[cameraType]}
+              flashMode={RNCamera.Constants.FlashMode[flashType]}
+            />
+
+            {/*   Taking a Picture Animation   */}
+            <View style={styles.takingPicture}>
+              <Animated.View style={{ ...styles.takingPictureGreen, marginLeft: slide2RightAnim }}>
+                <View style={styles.takingPictureGreenHide}>
+                  <Image source={images.bigGreen} style={styles.takingPictureGreen} />
+                </View>
+              </Animated.View>
+              <Animated.View style={{ ...styles.takingPictureOrange, marginLeft: slide2LeftAnim }}>
+                <View style={styles.takingPictureOrangeHide}>
+                  <Image source={images.bigOrange} style={styles.takingPictureOrange} />
+                </View>
+              </Animated.View>
             </View>
           </View>
-
-          {/*   Camera Preview   */}
-          <RNCamera
-            ref={(ref) => {
-              this.cameraEleRef = ref;
-            }}
-            style={styles.cameraPreview}
-            type={RNCamera.Constants.Type[cameraType]}
-            flashMode={RNCamera.Constants.FlashMode[flashType]}
-          />
         </View>
       </View>
 
@@ -150,7 +182,7 @@ export function Home(props) {
             </TouchableWithoutFeedback>
           </View>
           <View style={styles.footerBtnWrapper}>
-            <TouchableWithoutFeedback onPress={takePicture}>
+            <TouchableWithoutFeedback onPress={() => takePicture()}>
               <Image source={images.buttonCamera} resizeMode="contain" style={styles.cameraImage} />
             </TouchableWithoutFeedback>
           </View>

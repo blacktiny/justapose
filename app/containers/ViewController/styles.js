@@ -36,26 +36,40 @@ export const styles = StyleSheet.create({
     height: 28,
   },
   cameraPreviewWrapper: {
+    display: 'flex',
+    alignItems: 'center',
     position: 'relative',
     width: deviceWitdh,
-    height: 400,
+    height: deviceWitdh,
   },
-  takingPicture: {
-    position: 'absolute',
-    display: 'flex',
-  },
-  takingPictureGreen: {
+  cameraPreviewContainer: {
+    position: 'relative',
     width: deviceWitdh,
     height: deviceWitdh,
-    marginLeft: -(deviceWitdh + 50),
-  },
-  takingPictureOrange: {
-    width: deviceWitdh,
-    height: deviceWitdh,
+    marginTop: 'auto',
   },
   cameraPreview: {
-    width: deviceWitdh,
-    height: 400,
+    width: '100%',
+    height: '100%',
+  },
+  takingPicture: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+  },
+  takingPictureGreen: {
+    width: deviceWitdh * 1.3,
+    height: deviceWitdh * 1.3,
+    marginTop: -deviceWitdh * 0.075,
+  },
+  takingPictureOrange: {
+    width: deviceWitdh * 1.3,
+    height: deviceWitdh * 1.3,
+    marginTop: -deviceWitdh * 0.7,
   },
 
   // Footer
@@ -67,7 +81,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    bottom: 40,
+    bottom: 30,
   },
   tipImage: {
     width: deviceWitdh,
