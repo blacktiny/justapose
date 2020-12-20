@@ -68,6 +68,7 @@ export const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
+    zIndex: 2,
   },
   takingPictureGreen: {
     width: deviceWitdh * 1.3,
@@ -89,6 +90,18 @@ export const styles = StyleSheet.create({
     height: deviceWitdh,
   },
 
+  // Opacity Slider
+  opacitySliderContainer: {
+    width: deviceWitdh - 30,
+    marginLeft: 15,
+    marginRight: 15,
+  },
+  adjustTransTip: {
+    width: deviceWitdh,
+    height: 40,
+    marginTop: -20,
+  },
+
   // Footer
   footer: {
     width: deviceWitdh,
@@ -101,6 +114,17 @@ export const styles = StyleSheet.create({
     bottom: 30,
   },
   // Tip
+  addAnotherTip: {
+    width: deviceWitdh,
+    height: 50,
+    marginLeft: -deviceWitdh * 0.2,
+  },
+  saveitTip: {
+    height: 60,
+    marginLeft: deviceWitdh * 0.6,
+    marginTop: -50,
+    marginBottom: -10,
+  },
   tutShootTip: {
     width: deviceWitdh,
     height: 60,
@@ -123,6 +147,10 @@ export const styles = StyleSheet.create({
   cameraImage: {
     width: 200,
     height: 100,
+  },
+  rotateImage: {
+    width: 40,
+    height: 40,
   },
   buttonImage: {
     width: 57,

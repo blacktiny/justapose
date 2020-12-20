@@ -11,7 +11,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // Screens
-import Welcome from '../Welcome';
 import Home from '../Home';
 import ViewController from '../ViewController';
 
