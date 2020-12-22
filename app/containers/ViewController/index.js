@@ -9,11 +9,14 @@ import { Alert, Animated, Dimensions, Image, View, TouchableWithoutFeedback, Saf
 import { RNCamera } from 'react-native-camera';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Slider from 'react-native-slider';
+import { captureScreen } from 'react-native-view-shot';
+import ImageEditor from '@react-native-community/image-editor';
 
 import images from 'images';
 import { styles } from './styles';
 
 const deviceWitdh = Dimensions.get('window').width;
+const deviceHeight = Dimensions.get('window').height;
 
 const FLASH_TYPE = {
   AUTO: 'auto',
@@ -37,11 +40,13 @@ const CONTROL_STEP = {
   UPLOAD: '2-Upload',
   ROTATE: '3-Rotate',
   JUSTAPOSE: '4-JustAPose',
-  BLEND: '5-Blend',
+  PREVIEW: '5-Preview',
+  BLEND: '6-Blend',
 };
 
 export function ViewController(props) {
   // Global
+  const [prevControlStep, setPrevControlStep] = useState(CONTROL_STEP.HOME);
   const [controlStep, setControlStep] = useState(CONTROL_STEP.UPLOAD);
   const [pictureInfo, setPictureInfo] = useState({
     rotate: 0,
@@ -51,6 +56,7 @@ export function ViewController(props) {
     rotate: 0,
     uri: '',
   });
+  const [mixedPicturesInfo, setMixedPicturesInfo] = useState([]);
   const [controlTooltipInfo, setControlTooltipInfo] = useState({
     addAnother: false,
     saveit: false,
@@ -104,7 +110,8 @@ export function ViewController(props) {
         break;
       case CONTROL_STEP.JUSTAPOSE:
         setControlTooltipInfo({
-          ...controlTooltipInfo,
+          addAnother: false,
+          saveit: false,
           tutShoot: true,
         });
         setFooterControlBtn({
@@ -114,7 +121,7 @@ export function ViewController(props) {
         setFooterRightBtnImg(images.buttonUpload);
         setFooterLeftBtnImg(images.buttonCancel);
         break;
-      case CONTROL_STEP.BLEND:
+      case CONTROL_STEP.PREVIEW:
         setControlTooltipInfo({
           addAnother: true,
           saveit: true,
@@ -151,7 +158,7 @@ export function ViewController(props) {
         showOpacitySlider = true;
         showImagePreview = true;
         break;
-      case CONTROL_STEP.BLEND:
+      case CONTROL_STEP.PREVIEW:
         showImagePreview = true;
         showNextImagePreview = true;
         break;
@@ -192,6 +199,7 @@ export function ViewController(props) {
         uploadPictureFromGallery();
         break;
       case CONTROL_STEP.ROTATE:
+        setPrevControlStep(controlStep);
         setControlStep(CONTROL_STEP.JUSTAPOSE);
         break;
       case CONTROL_STEP.JUSTAPOSE:
@@ -213,9 +221,15 @@ export function ViewController(props) {
         setControlStep(CONTROL_STEP.UPLOAD);
         break;
       case CONTROL_STEP.JUSTAPOSE:
-        setControlStep(CONTROL_STEP.ROTATE);
+        if (prevControlStep === CONTROL_STEP.PREVIEW) {
+          if (mixedPicturesInfo.length > 0) {
+            setPictureInfo(mixedPicturesInfo[0]);
+            setNextPictureInfo(mixedPicturesInfo[1]);
+          }
+        }
+        setControlStep(prevControlStep);
         break;
-      case CONTROL_STEP.BLEND:
+      case CONTROL_STEP.PREVIEW:
         Alert.alert(
           'Question',
           'This will delete your current just-a-pose',
@@ -246,7 +260,6 @@ export function ViewController(props) {
         takePicture();
         break;
       case CONTROL_STEP.ROTATE:
-        // alert(pictureInfo);
         setPictureInfo({
           ...pictureInfo,
           rotate: (pictureInfo.rotate + 90) % 360,
@@ -254,6 +267,9 @@ export function ViewController(props) {
         break;
       case CONTROL_STEP.JUSTAPOSE:
         takePicture();
+        break;
+      case CONTROL_STEP.PREVIEW:
+        takeScreenShot();
         break;
       default:
         break;
@@ -302,7 +318,7 @@ export function ViewController(props) {
           if (controlStep === CONTROL_STEP.UPLOAD) {
             setControlStep(CONTROL_STEP.ROTATE);
           } else if (controlStep === CONTROL_STEP.JUSTAPOSE) {
-            setControlStep(CONTROL_STEP.BLEND);
+            setControlStep(CONTROL_STEP.PREVIEW);
           }
         }, 1000);
       }, 1000);
@@ -339,7 +355,7 @@ export function ViewController(props) {
         if (controlStep === CONTROL_STEP.UPLOAD) {
           setControlStep(CONTROL_STEP.ROTATE);
         } else if (controlStep === CONTROL_STEP.JUSTAPOSE) {
-          setControlStep(CONTROL_STEP.BLEND);
+          setControlStep(CONTROL_STEP.PREVIEW);
         }
       }
     });
@@ -357,6 +373,52 @@ export function ViewController(props) {
     });
     setControlStep(CONTROL_STEP.HOME);
     props.navigation.navigate('Home');
+  };
+
+  // Take a screenshot
+  const takeScreenShot = () => {
+    captureScreen({
+      width: deviceWitdh,
+      height: deviceHeight,
+      // Either png or jpg (or webm Android Only), Defaults: png
+      format: 'jpg',
+      // Quality 0.0 - 1.0 (only available for jpg)
+      quality: 0.8,
+    }).then(
+      //callback function to get the result URL of the screnshot
+      (uri) => {
+        // Store two pictures info before mixing
+        setMixedPicturesInfo([pictureInfo, nextPictureInfo]);
+
+        // Crop a taken screenshot to get only image view
+        const cropData = {
+          offset: { x: 0, y: 164 },
+          size: { width: deviceWitdh, height: deviceWitdh },
+          // // Size to which you want to scale the cropped image
+          // displaySize: { width: deviceWitdh, height: deviceWitdh },
+          // resizeMode: 'contain' | 'cover' | 'stretch',
+        };
+
+        ImageEditor.cropImage(uri, cropData).then(
+          (url) => {
+            //
+            setPictureInfo({
+              rotate: 0,
+              uri: url,
+            });
+            setNextPictureInfo({
+              rotate: 0,
+              uri: '',
+            });
+
+            setPrevControlStep(controlStep);
+            setControlStep(CONTROL_STEP.JUSTAPOSE);
+          },
+          (error) => console.error('Oops, Something Went Wrong', error),
+        );
+      },
+      (error) => console.error('Oops, Something Went Wrong', error),
+    );
   };
 
   return (
