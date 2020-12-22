@@ -54,7 +54,6 @@ export const styles = StyleSheet.create({
     position: 'relative',
     width: deviceWitdh,
     height: deviceWitdh,
-    marginTop: 'auto',
   },
   cameraPreview: {
     width: '100%',
@@ -133,9 +132,11 @@ export const styles = StyleSheet.create({
   },
   // Control Buttons
   btnsGroupWrapper: {
+    width: deviceWitdh,
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   footerBtnWrapper: {
     display: 'flex',
@@ -155,5 +156,36 @@ export const styles = StyleSheet.create({
   buttonImage: {
     width: 57,
     height: 57,
+  },
+
+  // Blend Mode
+  blendModeScrollView: {
+    width: deviceWitdh,
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'scroll',
+    backgroundColor: 'lightgrey',
+  },
+  blendModeList: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 5,
+    paddingBottom: 15,
+  },
+  blendModeImage: {
+    width: 50,
+    height: 50,
+    marginHorizontal: 10,
+  },
+  underSelector: {
+    position: 'absolute',
+    top: 60,
+    width: 30,
+    height: 3,
+    marginHorizontal: 20,
+    backgroundColor: 'grey',
   },
 });

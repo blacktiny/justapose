@@ -6,12 +6,14 @@
 
 import React, { createRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Animated, Dimensions, Image, View, TouchableWithoutFeedback, SafeAreaView } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import { RNCamera } from 'react-native-camera';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Slider from 'react-native-slider';
 import { captureScreen } from 'react-native-view-shot';
 import ImageEditor from '@react-native-community/image-editor';
 
+import BlendModesList, { MIX_BLEND_MODES } from './BlendModesList';
 import images from 'images';
 import { styles } from './styles';
 
@@ -37,38 +39,46 @@ const FLASH_IMAGES = {
 
 const CONTROL_STEP = {
   HOME: '1-Home',
-  UPLOAD: '2-Upload',
+  ADDJUST: '2-JustAPose',
   ROTATE: '3-Rotate',
-  JUSTAPOSE: '4-JustAPose',
-  PREVIEW: '5-Preview',
-  BLEND: '6-Blend',
+  PREVIEW: '4-Preview',
+  BLEND: '5-Blend',
 };
+
+export function Header() {
+  return (
+    <View>
+      <Image source={images.logo} resizeMode="contain" style={styles.logo} />
+      <Image source={images.counter} resizeMode="contain" style={styles.counter} />
+    </View>
+  );
+}
 
 export function ViewController(props) {
   // Global
-  const [prevControlStep, setPrevControlStep] = useState(CONTROL_STEP.HOME);
-  const [controlStep, setControlStep] = useState(CONTROL_STEP.UPLOAD);
-  const [pictureInfo, setPictureInfo] = useState({
+  const [currentControlStep, setCurrentControlStep] = useState(CONTROL_STEP.ADDJUST);
+  const [previewControlStep, setPreviewControlStep] = useState(CONTROL_STEP.HOME);
+  const [originImage, setOriginImage] = useState({
     rotate: 0,
     uri: '',
   });
-  const [nextPictureInfo, setNextPictureInfo] = useState({
+  const [newImage, setNewImage] = useState({
     rotate: 0,
     uri: '',
   });
-  const [mixedPicturesInfo, setMixedPicturesInfo] = useState([]);
+  const [mixedImages, setMixedImages] = useState([]);
   const [controlTooltipInfo, setControlTooltipInfo] = useState({
     addAnother: false,
     saveit: false,
     tutShoot: false,
   });
 
-  // In Upload Step
+  // In Add New Just A Pose Image Step
   const [takingPicture, setTakingPicture] = useState(false);
   const [flashType, setFlashType] = useState(FLASH_TYPE.AUTO);
   const [cameraType, setCameraType] = useState(CAMERA_TYPE.FRONT);
 
-  // In Just A Pose Step
+  //
   const [justOpacity, setJustOpacity] = useState(0.5);
 
   // Footer Control Buttons
@@ -79,22 +89,27 @@ export function ViewController(props) {
   });
   const [footerRightBtnImg, setFooterRightBtnImg] = useState(images.buttonUpload);
 
+  // Blend Mode
+  const [blendMode, setBlendMode] = useState(MIX_BLEND_MODES[0].mode); // default mode = Normal
+
   let cameraEleRef = createRef();
 
   const slide2LeftAnim = useRef(new Animated.Value(deviceWitdh + 50)).current;
   const slide2RightAnim = useRef(new Animated.Value(-(deviceWitdh + 150))).current;
 
   useEffect(() => {
-    switch (controlStep) {
-      case CONTROL_STEP.UPLOAD:
+    switch (currentControlStep) {
+      case CONTROL_STEP.ADDJUST:
         setControlTooltipInfo({
-          ...controlTooltipInfo,
+          addAnother: false,
+          saveit: false,
           tutShoot: true,
         });
         setFooterControlBtn({
           image: images.buttonCamera,
           style: styles.cameraImage,
         });
+        setFooterLeftBtnImg(images.buttonCancel);
         setFooterRightBtnImg(images.buttonUpload);
         break;
       case CONTROL_STEP.ROTATE:
@@ -107,19 +122,6 @@ export function ViewController(props) {
           style: styles.rotateImage,
         });
         setFooterRightBtnImg(images.buttonUse);
-        break;
-      case CONTROL_STEP.JUSTAPOSE:
-        setControlTooltipInfo({
-          addAnother: false,
-          saveit: false,
-          tutShoot: true,
-        });
-        setFooterControlBtn({
-          image: images.buttonCamera,
-          style: styles.cameraImage,
-        });
-        setFooterRightBtnImg(images.buttonUpload);
-        setFooterLeftBtnImg(images.buttonCancel);
         break;
       case CONTROL_STEP.PREVIEW:
         setControlTooltipInfo({
@@ -134,33 +136,55 @@ export function ViewController(props) {
         setFooterRightBtnImg(images.buttonNext);
         setFooterLeftBtnImg(images.buttonHome);
         break;
+      case CONTROL_STEP.BLEND:
+        setControlTooltipInfo({
+          addAnother: false,
+          saveit: false,
+          tutShoot: false,
+        });
+        setFooterControlBtn(null);
+        setFooterRightBtnImg(images.buttonSave);
+        setFooterLeftBtnImg(images.buttonBack);
+        break;
       default:
         break;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [controlStep]);
+  }, [currentControlStep]);
 
-  const { isShowCameraPreview, isShowImagePreview, isShowNextImagePreview, isShowOpacitySlider } = useMemo(() => {
+  const {
+    isShowCameraPreview,
+    isShowOriginImage,
+    isShowNewImage,
+    isShowOpacitySlider,
+    isShowBlendMode,
+  } = useMemo(() => {
     let showCameraPreview = false;
     let showOpacitySlider = false;
-    let showImagePreview = false;
-    let showNextImagePreview = false;
+    let showOriginImage = false;
+    let showNewImage = false;
+    let showBlendMode = false;
 
-    switch (controlStep) {
-      case CONTROL_STEP.UPLOAD:
+    switch (currentControlStep) {
+      case CONTROL_STEP.ADDJUST:
         showCameraPreview = true;
+        if (originImage.uri) {
+          showOriginImage = true;
+          showOpacitySlider = true;
+        }
         break;
       case CONTROL_STEP.ROTATE:
-        showImagePreview = true;
-        break;
-      case CONTROL_STEP.JUSTAPOSE:
-        showCameraPreview = true;
-        showOpacitySlider = true;
-        showImagePreview = true;
+        showNewImage = true;
+        if (originImage.uri) {
+          showOriginImage = true;
+        }
         break;
       case CONTROL_STEP.PREVIEW:
-        showImagePreview = true;
-        showNextImagePreview = true;
+        showOriginImage = true;
+        showNewImage = true;
+        break;
+      case CONTROL_STEP.BLEND:
+        showBlendMode = true;
         break;
       default:
         break;
@@ -168,11 +192,13 @@ export function ViewController(props) {
 
     return {
       isShowCameraPreview: showCameraPreview,
-      isShowImagePreview: showImagePreview,
-      isShowNextImagePreview: showNextImagePreview,
+      isShowOriginImage: showOriginImage,
+      isShowNewImage: showNewImage,
       isShowOpacitySlider: showOpacitySlider,
+      isShowBlendMode: showBlendMode,
     };
-  }, [controlStep]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentControlStep]);
 
   const changeFlashType = useCallback(() => {
     if (flashType === FLASH_TYPE.AUTO) {
@@ -192,47 +218,60 @@ export function ViewController(props) {
     }
   }, [cameraType]);
 
-  //
+  // Event halder for right button in the footer
   const gotoNextStep = useCallback(() => {
-    switch (controlStep) {
-      case CONTROL_STEP.UPLOAD:
+    switch (currentControlStep) {
+      case CONTROL_STEP.ADDJUST:
         uploadPictureFromGallery();
         break;
       case CONTROL_STEP.ROTATE:
-        setPrevControlStep(controlStep);
-        setControlStep(CONTROL_STEP.JUSTAPOSE);
+        setPreviewControlStep(currentControlStep);
+        if (originImage.uri) {
+          setCurrentControlStep(CONTROL_STEP.PREVIEW);
+        } else {
+          setOriginImage({ ...newImage });
+          setNewImage({
+            rotate: 0,
+            uri: '',
+          });
+          setCurrentControlStep(CONTROL_STEP.ADDJUST);
+        }
         break;
-      case CONTROL_STEP.JUSTAPOSE:
-        uploadPictureFromGallery();
+      case CONTROL_STEP.PREVIEW:
+        setCurrentControlStep(CONTROL_STEP.BLEND);
         break;
       default:
         break;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [controlStep]);
+  }, [currentControlStep, originImage, newImage]);
 
-  //
+  // Event halder for left button in the footer
   const backToPrevStep = useCallback(() => {
-    switch (controlStep) {
-      case CONTROL_STEP.UPLOAD:
-        props.navigation.navigate('Home');
+    switch (currentControlStep) {
+      case CONTROL_STEP.ADDJUST:
+        if (previewControlStep === CONTROL_STEP.ROTATE) {
+          setCurrentControlStep(previewControlStep);
+          setNewImage({ ...originImage });
+          setOriginImage({
+            rotate: 0,
+            uri: '',
+          });
+        } else if (previewControlStep === CONTROL_STEP.PREVIEW) {
+          setCurrentControlStep(previewControlStep);
+          setOriginImage(mixedImages[0]);
+          setNewImage(mixedImages[1]);
+          setMixedImages([]);
+        } else {
+          props.navigation.navigate('Home');
+        }
         break;
       case CONTROL_STEP.ROTATE:
-        setControlStep(CONTROL_STEP.UPLOAD);
-        break;
-      case CONTROL_STEP.JUSTAPOSE:
-        if (prevControlStep === CONTROL_STEP.PREVIEW) {
-          if (mixedPicturesInfo.length > 0) {
-            setPictureInfo(mixedPicturesInfo[0]);
-            setNextPictureInfo(mixedPicturesInfo[1]);
-          }
-        }
-        setControlStep(prevControlStep);
+        setCurrentControlStep(CONTROL_STEP.ADDJUST);
         break;
       case CONTROL_STEP.PREVIEW:
         Alert.alert(
-          'Question',
           'This will delete your current just-a-pose',
+          '',
           [
             {
               text: 'Cancel',
@@ -248,25 +287,25 @@ export function ViewController(props) {
           },
         );
         break;
+      case CONTROL_STEP.BLEND:
+        setCurrentControlStep(CONTROL_STEP.PREVIEW);
+        break;
       default:
         break;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [controlStep, props.navigation]);
+  }, [currentControlStep, props.navigation]);
 
   const handleControlBtnClicked = useCallback(() => {
-    switch (controlStep) {
-      case CONTROL_STEP.UPLOAD:
+    switch (currentControlStep) {
+      case CONTROL_STEP.ADDJUST:
         takePicture();
         break;
       case CONTROL_STEP.ROTATE:
-        setPictureInfo({
-          ...pictureInfo,
-          rotate: (pictureInfo.rotate + 90) % 360,
+        setNewImage({
+          ...newImage,
+          rotate: (newImage.rotate + 90) % 360,
         });
-        break;
-      case CONTROL_STEP.JUSTAPOSE:
-        takePicture();
         break;
       case CONTROL_STEP.PREVIEW:
         takeScreenShot();
@@ -275,7 +314,13 @@ export function ViewController(props) {
         break;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [controlStep, pictureInfo]);
+  }, [currentControlStep, newImage]);
+
+  // update blend mode
+  const updateBlendMode = useCallback((updatedBlendMode) => {
+    alert(updatedBlendMode.mode);
+    setBlendMode(updatedBlendMode.mode);
+  }, []);
 
   // take a picture by camera
   const takePicture = async () => {
@@ -294,12 +339,7 @@ export function ViewController(props) {
 
       const options = { quality: 0.5, base64: true };
       const data = await cameraEleRef.takePictureAsync(options);
-      if (controlStep === CONTROL_STEP.UPLOAD) {
-        setPictureInfo({ rotate: 0, uri: data.uri });
-      } else if (controlStep === CONTROL_STEP.JUSTAPOSE) {
-        setNextPictureInfo({ rotate: 0, uri: data.uri });
-      }
-      // console.log(data.uri);
+      setNewImage({ rotate: 0, uri: data.uri });
 
       setTimeout(() => {
         setTakingPicture(false);
@@ -315,11 +355,7 @@ export function ViewController(props) {
         }).start();
 
         setTimeout(() => {
-          if (controlStep === CONTROL_STEP.UPLOAD) {
-            setControlStep(CONTROL_STEP.ROTATE);
-          } else if (controlStep === CONTROL_STEP.JUSTAPOSE) {
-            setControlStep(CONTROL_STEP.PREVIEW);
-          }
+          setCurrentControlStep(CONTROL_STEP.ROTATE);
         }, 1000);
       }, 1000);
     }
@@ -346,32 +382,23 @@ export function ViewController(props) {
         console.log('User tapped custom button: ', res.customButton);
         // alert(res.customButton);
       } else {
-        let source = res;
-        if (controlStep === CONTROL_STEP.UPLOAD) {
-          setPictureInfo({ rotate: 0, uri: source.uri });
-        } else if (controlStep === CONTROL_STEP.JUSTAPOSE) {
-          setNextPictureInfo({ rotate: 0, uri: source.uri });
-        }
-        if (controlStep === CONTROL_STEP.UPLOAD) {
-          setControlStep(CONTROL_STEP.ROTATE);
-        } else if (controlStep === CONTROL_STEP.JUSTAPOSE) {
-          setControlStep(CONTROL_STEP.PREVIEW);
-        }
+        setNewImage({ rotate: 0, uri: res.uri });
+        setCurrentControlStep(CONTROL_STEP.ROTATE);
       }
     });
   };
 
-  // Delete the current taken pictures.
+  // Delete the current taken pictures
   const deleteCurrentJustapose = () => {
-    setPictureInfo({
+    setOriginImage({
       rotate: 0,
       uri: '',
     });
-    setNextPictureInfo({
+    setNewImage({
       rotate: 0,
       uri: '',
     });
-    setControlStep(CONTROL_STEP.HOME);
+    setCurrentControlStep(CONTROL_STEP.HOME);
     props.navigation.navigate('Home');
   };
 
@@ -388,12 +415,12 @@ export function ViewController(props) {
       //callback function to get the result URL of the screnshot
       (uri) => {
         // Store two pictures info before mixing
-        setMixedPicturesInfo([pictureInfo, nextPictureInfo]);
+        setMixedImages([originImage, newImage]);
 
         // Crop a taken screenshot to get only image view
         const cropData = {
-          offset: { x: 0, y: 164 },
-          size: { width: deviceWitdh, height: deviceWitdh },
+          offset: { x: 0, y: 230 },
+          size: { width: deviceWitdh * 2, height: deviceWitdh * 2 },
           // // Size to which you want to scale the cropped image
           // displaySize: { width: deviceWitdh, height: deviceWitdh },
           // resizeMode: 'contain' | 'cover' | 'stretch',
@@ -402,17 +429,17 @@ export function ViewController(props) {
         ImageEditor.cropImage(uri, cropData).then(
           (url) => {
             //
-            setPictureInfo({
+            setOriginImage({
               rotate: 0,
               uri: url,
             });
-            setNextPictureInfo({
+            setNewImage({
               rotate: 0,
               uri: '',
             });
 
-            setPrevControlStep(controlStep);
-            setControlStep(CONTROL_STEP.JUSTAPOSE);
+            setPreviewControlStep(currentControlStep);
+            setCurrentControlStep(CONTROL_STEP.ADDJUST);
           },
           (error) => console.error('Oops, Something Went Wrong', error),
         );
@@ -424,10 +451,7 @@ export function ViewController(props) {
   return (
     <SafeAreaView style={styles.screen}>
       {/*   Header   */}
-      <View>
-        <Image source={images.logo} resizeMode="contain" style={styles.logo} />
-        <Image source={images.counter} resizeMode="contain" style={styles.counter} />
-      </View>
+      <Header />
 
       {/*   Content   */}
       <View>
@@ -443,75 +467,91 @@ export function ViewController(props) {
           </View>
         )}
 
-        <View style={styles.cameraPreviewContainer}>
-          {/*   Camera Preview   */}
-          {isShowCameraPreview && (
-            <RNCamera
-              ref={(ref) => {
-                if (ref) {
-                  cameraEleRef = ref;
-                }
-              }}
-              style={styles.cameraPreview}
-              type={RNCamera.Constants.Type[cameraType]}
-              flashMode={RNCamera.Constants.FlashMode[flashType]}
-            />
-          )}
+        {!isShowBlendMode && (
+          <View style={styles.cameraPreviewContainer}>
+            {/*   Camera Preview   */}
+            {isShowCameraPreview && (
+              <RNCamera
+                ref={(ref) => {
+                  if (ref) {
+                    cameraEleRef = ref;
+                  }
+                }}
+                style={styles.cameraPreview}
+                type={RNCamera.Constants.Type[cameraType]}
+                flashMode={RNCamera.Constants.FlashMode[flashType]}
+              />
+            )}
 
-          {isShowNextImagePreview && (
-            <View>
-              {nextPictureInfo.uri !== '' && (
-                <Image
-                  source={{ isStatic: true, uri: nextPictureInfo.uri }}
-                  resizeMode="contain"
-                  style={styles.imagePreview}
-                />
-              )}
-            </View>
-          )}
+            {isShowNewImage && (
+              <View
+                style={{
+                  ...styles.imagePreviewWrapper,
+                  transform: [{ rotate: `${newImage.rotate}deg` }],
+                }}>
+                {newImage.uri !== '' && (
+                  <Image
+                    source={{ isStatic: true, uri: newImage.uri }}
+                    resizeMode="contain"
+                    style={styles.imagePreview}
+                  />
+                )}
+              </View>
+            )}
 
-          {isShowImagePreview && (
-            <View
-              // eslint-disable-next-line react-native/no-inline-styles
-              style={{
-                marginTop: isShowCameraPreview || isShowNextImagePreview ? -(deviceWitdh + 28) : 0,
-                opacity: controlStep >= CONTROL_STEP.JUSTAPOSE ? justOpacity : 1,
-              }}>
-              {/*   Image Preview   */}
-              {pictureInfo && (
-                <View
-                  style={{
-                    ...styles.imagePreviewWrapper,
-                    transform: [{ rotate: `${pictureInfo.rotate}deg` }],
-                  }}>
-                  {pictureInfo.uri !== '' && (
+            {isShowOriginImage && (
+              <View
+                // eslint-disable-next-line react-native/no-inline-styles
+                style={{
+                  marginTop: isShowCameraPreview || isShowNewImage ? -(deviceWitdh + 28) : 0,
+                  opacity: originImage.uri ? justOpacity : 1,
+                }}>
+                {/*   Image Preview   */}
+                {originImage.uri !== '' && (
+                  <View
+                    style={{
+                      ...styles.imagePreviewWrapper,
+                      transform: [{ rotate: `${originImage.rotate}deg` }],
+                    }}>
                     <Image
-                      source={{ isStatic: true, uri: pictureInfo.uri }}
+                      source={{ isStatic: true, uri: originImage.uri }}
                       resizeMode="contain"
                       style={styles.imagePreview}
                     />
-                  )}
-                </View>
-              )}
-            </View>
-          )}
+                  </View>
+                )}
+              </View>
+            )}
 
-          {/*   Taking a Picture Animation   */}
-          {isShowCameraPreview && (
-            <View style={styles.takingPicture}>
-              <Animated.View style={{ ...styles.takingPictureGreen, marginLeft: slide2RightAnim }}>
-                <View style={styles.takingPictureGreenHide}>
-                  <Image source={images.bigGreen} style={styles.takingPictureGreen} />
-                </View>
-              </Animated.View>
-              <Animated.View style={{ ...styles.takingPictureOrange, marginLeft: slide2LeftAnim }}>
-                <View style={styles.takingPictureOrangeHide}>
-                  <Image source={images.bigOrange} style={styles.takingPictureOrange} />
-                </View>
-              </Animated.View>
-            </View>
-          )}
-        </View>
+            {/*   Taking a Picture Animation   */}
+            {isShowCameraPreview && (
+              <View style={styles.takingPicture}>
+                <Animated.View style={{ ...styles.takingPictureGreen, marginLeft: slide2RightAnim }}>
+                  <View style={styles.takingPictureGreenHide}>
+                    <Image source={images.bigGreen} style={styles.takingPictureGreen} />
+                  </View>
+                </Animated.View>
+                <Animated.View style={{ ...styles.takingPictureOrange, marginLeft: slide2LeftAnim }}>
+                  <View style={styles.takingPictureOrangeHide}>
+                    <Image source={images.bigOrange} style={styles.takingPictureOrange} />
+                  </View>
+                </Animated.View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {isShowBlendMode && (
+          <View style={styles.imagePreviewWrapper}>
+            <Image
+              source={{ isStatic: true, uri: newImage.uri }}
+              resizeMode="contain"
+              // eslint-disable-next-line react-native/no-inline-styles
+              style={{ ...styles.imagePreview, position: 'absolute' }}
+            />
+            <Image source={{ isStatic: true, uri: originImage.uri }} resizeMode="contain" style={styles.imagePreview} />
+          </View>
+        )}
       </View>
 
       {isShowOpacitySlider && (
@@ -535,21 +575,25 @@ export function ViewController(props) {
         {/*   Control Buttons   */}
         <View style={styles.btnsGroupWrapper}>
           <View style={styles.footerBtnWrapper}>
-            <TouchableWithoutFeedback onPress={() => backToPrevStep()}>
+            <TouchableOpacity onPress={() => backToPrevStep()}>
               <Image source={footerLeftBtnImg} resizeMode="contain" style={styles.buttonImage} />
-            </TouchableWithoutFeedback>
+            </TouchableOpacity>
           </View>
+          {footerControlBtn && (
+            <View style={styles.footerBtnWrapper}>
+              <TouchableWithoutFeedback onPress={() => handleControlBtnClicked()}>
+                <Image source={footerControlBtn.image} resizeMode="contain" style={footerControlBtn.style} />
+              </TouchableWithoutFeedback>
+            </View>
+          )}
           <View style={styles.footerBtnWrapper}>
-            <TouchableWithoutFeedback onPress={() => handleControlBtnClicked()}>
-              <Image source={footerControlBtn.image} resizeMode="contain" style={footerControlBtn.style} />
-            </TouchableWithoutFeedback>
-          </View>
-          <View style={styles.footerBtnWrapper}>
-            <TouchableWithoutFeedback onPress={() => gotoNextStep()}>
+            <TouchableOpacity onPress={() => gotoNextStep()}>
               <Image source={footerRightBtnImg} resizeMode="contain" style={styles.buttonImage} />
-            </TouchableWithoutFeedback>
+            </TouchableOpacity>
           </View>
         </View>
+
+        {isShowBlendMode && <BlendModesList onBlendModeChanged={updateBlendMode} />}
       </View>
     </SafeAreaView>
   );
