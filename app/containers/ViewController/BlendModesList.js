@@ -6,86 +6,108 @@
 
 import React, { useCallback, useRef } from 'react';
 import { Animated, Image, View, TouchableWithoutFeedback } from 'react-native';
+import { FlatList } from 'react-native-gesture-handler';
 
 import images from 'images';
 import { styles } from './styles';
 
+export const BLEND_MODE_TYPES = {
+  BLEND_NORMAL: 'normal',
+  BLEND_MULTIPLY: 'multiply',
+  BLEND_COLOR_BURN: 'color-burn',
+  BLEND_DARKEN: 'darken',
+  BLEND_LIGHTEN: 'lighten',
+  BLEND_INVERT: 'invert',
+  BLEND_EXCLUSION: 'exclusion',
+  BLEND_OVERLAY: 'overlay',
+  BLEND_SCREEN: 'screen',
+  BLEND_SHARP: 'sharp',
+  BLEND_STEEP: 'steep',
+  BLEND_EMBER: 'ember',
+  BLEND_GLEAM: 'gleam',
+  BLEND_DOWN: 'down',
+  BLEND_HUE: 'hue',
+  BLEND_COLOR: 'color',
+};
+
 export const MIX_BLEND_MODES = [
   {
-    mode: 'normal',
+    mode: BLEND_MODE_TYPES.BLEND_NORMAL,
     image: images.blendNormal,
   },
   {
-    mode: 'multiply',
+    mode: BLEND_MODE_TYPES.BLEND_MULTIPLY,
     image: images.blendMultiply,
   },
   {
-    mode: 'color-burn',
+    mode: BLEND_MODE_TYPES.BLEND_COLOR_BURN,
     image: images.blendBurn,
   },
   {
-    mode: 'darken',
+    mode: BLEND_MODE_TYPES.BLEND_DARKEN,
     image: images.blendDarken,
   },
   {
-    mode: 'lighten',
+    mode: BLEND_MODE_TYPES.BLEND_LIGHTEN,
     image: images.blendLighten,
   },
   {
-    mode: 'invert', //
+    mode: BLEND_MODE_TYPES.BLEND_INVERT,
     image: images.blendInvert,
   },
   {
-    mode: 'exclusion',
+    mode: BLEND_MODE_TYPES.BLEND_EXCLUSION,
     image: images.blendExclude,
   },
   {
-    mode: 'overlay',
+    mode: BLEND_MODE_TYPES.BLEND_OVERLAY,
     image: images.blendOverlay,
   },
   {
-    mode: 'screen',
+    mode: BLEND_MODE_TYPES.BLEND_SCREEN,
     image: images.blendScreen,
   },
   {
-    mode: 'sharp', //
+    mode: BLEND_MODE_TYPES.BLEND_SHARP,
     image: images.blendSharp,
   },
   {
-    mode: 'steep', //
+    mode: BLEND_MODE_TYPES.BLEND_STEEP,
     image: images.blendSteep,
   },
   {
-    mode: 'ember', //
+    mode: BLEND_MODE_TYPES.BLEND_EMBER,
     image: images.blendEmber,
   },
   {
-    mode: 'gleam', //
+    mode: BLEND_MODE_TYPES.BLEND_GLEAM,
     image: images.blendGleam,
   },
   {
-    mode: 'down', //
+    mode: BLEND_MODE_TYPES.BLEND_DOWN,
     image: images.blendDown,
   },
   {
-    mode: 'hue', //
+    mode: BLEND_MODE_TYPES.BLEND_HUE,
     image: images.blendHue,
   },
   {
-    mode: 'color', //
+    mode: BLEND_MODE_TYPES.BLEND_COLOR,
     image: images.blendColor,
   },
 ];
 
-export function Home(props) {
+const BLEND_ITEM_WIDTH = 70;
+
+export function BlendModesList(props) {
   const { onBlendModeChanged } = props;
 
-  const selectorAnim = useRef(new Animated.Value(0)).current;
+  const selectorAnim = useRef(new Animated.Value(20)).current;
 
   const selectBlendMode = useCallback(
     (index) => {
       Animated.timing(selectorAnim, {
-        toValue: index * 70,
+        toValue: index * BLEND_ITEM_WIDTH + 20,
         duration: 500,
         useNativeDriver: false,
       }).start();
@@ -97,20 +119,30 @@ export function Home(props) {
 
   return (
     <View style={styles.blendModeScrollView}>
-      <View style={styles.blendModeList}>
-        {MIX_BLEND_MODES.map((blendMode, index) => {
+      <FlatList
+        contentContainerStyle={styles.blendModeList}
+        data={MIX_BLEND_MODES}
+        horizontal
+        ListFooterComponent={() => {
+          return (
+            <Animated.View style={{ ...styles.underSelector, left: selectorAnim }}>
+              <View style={styles.underSelector} />
+            </Animated.View>
+          );
+        }}
+        ListFooterComponentStyle={styles.underSelectorWrapper}
+        renderItem={({ item, index }) => {
           return (
             <TouchableWithoutFeedback onPress={() => selectBlendMode(index)}>
-              <Image key={blendMode.mode} source={blendMode.image} resizeMode="contain" style={styles.blendModeImage} />
+              <Image source={item.image} resizeMode="contain" style={styles.blendModeImage} />
             </TouchableWithoutFeedback>
           );
-        })}
-      </View>
-      <Animated.View style={{ ...styles.underSelector, left: selectorAnim }}>
-        <View style={styles.underSelector} />
-      </Animated.View>
+        }}
+        keyExtractor={(item) => item.mode}
+        showsHorizontalScrollIndicator={false}
+      />
     </View>
   );
 }
 
-export default Home;
+export default BlendModesList;

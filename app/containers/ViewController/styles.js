@@ -168,7 +168,6 @@ export const styles = StyleSheet.create({
     backgroundColor: 'lightgrey',
   },
   blendModeList: {
-    width: '100%',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
@@ -180,12 +179,17 @@ export const styles = StyleSheet.create({
     height: 50,
     marginHorizontal: 10,
   },
-  underSelector: {
+  underSelectorWrapper: {
+    width: '100%',
+    height: 10,
     position: 'absolute',
     top: 60,
+  },
+  underSelector: {
+    position: 'absolute',
+    top: 0,
     width: 30,
     height: 3,
-    marginHorizontal: 20,
     backgroundColor: 'grey',
   },
 });

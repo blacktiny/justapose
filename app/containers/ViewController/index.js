@@ -14,6 +14,7 @@ import { captureScreen } from 'react-native-view-shot';
 import ImageEditor from '@react-native-community/image-editor';
 
 import BlendModesList, { MIX_BLEND_MODES } from './BlendModesList';
+import MixBlendImagePreview from './MixBlendImagePreview';
 import images from 'images';
 import { styles } from './styles';
 
@@ -90,7 +91,7 @@ export function ViewController(props) {
   const [footerRightBtnImg, setFooterRightBtnImg] = useState(images.buttonUpload);
 
   // Blend Mode
-  const [blendMode, setBlendMode] = useState(MIX_BLEND_MODES[0].mode); // default mode = Normal
+  const [blendMode, setBlendMode] = useState(MIX_BLEND_MODES[0]); // default mode = Normal
 
   let cameraEleRef = createRef();
 
@@ -318,8 +319,7 @@ export function ViewController(props) {
 
   // update blend mode
   const updateBlendMode = useCallback((updatedBlendMode) => {
-    alert(updatedBlendMode.mode);
-    setBlendMode(updatedBlendMode.mode);
+    setBlendMode(updatedBlendMode);
   }, []);
 
   // take a picture by camera
@@ -543,13 +543,11 @@ export function ViewController(props) {
 
         {isShowBlendMode && (
           <View style={styles.imagePreviewWrapper}>
-            <Image
-              source={{ isStatic: true, uri: newImage.uri }}
-              resizeMode="contain"
-              // eslint-disable-next-line react-native/no-inline-styles
-              style={{ ...styles.imagePreview, position: 'absolute' }}
+            <MixBlendImagePreview
+              originImage={{ ...originImage, opacity: justOpacity }}
+              newImage={newImage}
+              blendMode={blendMode}
             />
-            <Image source={{ isStatic: true, uri: originImage.uri }} resizeMode="contain" style={styles.imagePreview} />
           </View>
         )}
       </View>
