@@ -4,46 +4,31 @@
  *
  */
 
-import React, { createRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, Image, View, TouchableWithoutFeedback, SafeAreaView } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Dimensions, Image, Modal, View, TouchableWithoutFeedback, SafeAreaView } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import { RNCamera } from 'react-native-camera';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Slider from 'react-native-slider';
 import { captureScreen } from 'react-native-view-shot';
 import ImageEditor from '@react-native-community/image-editor';
 
+import CameraPreview from './CameraPreview';
 import BlendModesList, { MIX_BLEND_MODES } from './BlendModesList';
 import MixBlendImagePreview from './MixBlendImagePreview';
+import SharePreviewModal from './SharePreviewModal';
 import images from 'images';
 import { styles } from './styles';
 
 const deviceWitdh = Dimensions.get('window').width;
 const deviceHeight = Dimensions.get('window').height;
 
-const FLASH_TYPE = {
-  AUTO: 'auto',
-  OFF: 'off',
-  ON: 'on',
-};
-
-const CAMERA_TYPE = {
-  FRONT: 'front',
-  BACK: 'back',
-};
-
-const FLASH_IMAGES = {
-  auto: images.flashAuto,
-  off: images.flashOff,
-  on: images.flashOn,
-};
-
-const CONTROL_STEP = {
+export const CONTROL_STEP = {
   HOME: '1-Home',
   ADDJUST: '2-JustAPose',
   ROTATE: '3-Rotate',
   PREVIEW: '4-Preview',
   BLEND: '5-Blend',
+  SHARE: '6-Share',
 };
 
 export function Header() {
@@ -76,8 +61,6 @@ export function ViewController(props) {
 
   // In Add New Just A Pose Image Step
   const [takingPicture, setTakingPicture] = useState(false);
-  const [flashType, setFlashType] = useState(FLASH_TYPE.AUTO);
-  const [cameraType, setCameraType] = useState(CAMERA_TYPE.FRONT);
 
   //
   const [justOpacity, setJustOpacity] = useState(0.5);
@@ -93,10 +76,8 @@ export function ViewController(props) {
   // Blend Mode
   const [blendMode, setBlendMode] = useState(MIX_BLEND_MODES[0]); // default mode = Normal
 
-  let cameraEleRef = createRef();
-
-  const slide2LeftAnim = useRef(new Animated.Value(deviceWitdh + 50)).current;
-  const slide2RightAnim = useRef(new Animated.Value(-(deviceWitdh + 150))).current;
+  // Share Modal
+  const [shareModalVisible, setShareModalVisible] = useState(false);
 
   useEffect(() => {
     switch (currentControlStep) {
@@ -170,7 +151,6 @@ export function ViewController(props) {
       case CONTROL_STEP.ADDJUST:
         showCameraPreview = true;
         if (originImage.uri) {
-          showOriginImage = true;
           showOpacitySlider = true;
         }
         break;
@@ -201,25 +181,7 @@ export function ViewController(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentControlStep]);
 
-  const changeFlashType = useCallback(() => {
-    if (flashType === FLASH_TYPE.AUTO) {
-      setFlashType(FLASH_TYPE.OFF);
-    } else if (flashType === FLASH_TYPE.OFF) {
-      setFlashType(FLASH_TYPE.ON);
-    } else if (flashType === FLASH_TYPE.ON) {
-      setFlashType(FLASH_TYPE.AUTO);
-    }
-  }, [flashType]);
-
-  const changeCameraType = useCallback(() => {
-    if (cameraType === CAMERA_TYPE.FRONT) {
-      setCameraType(CAMERA_TYPE.BACK);
-    } else if (cameraType === CAMERA_TYPE.BACK) {
-      setCameraType(CAMERA_TYPE.FRONT);
-    }
-  }, [cameraType]);
-
-  // Event halder for right button in the footer
+  // Event handler for right button in the footer
   const gotoNextStep = useCallback(() => {
     switch (currentControlStep) {
       case CONTROL_STEP.ADDJUST:
@@ -241,12 +203,15 @@ export function ViewController(props) {
       case CONTROL_STEP.PREVIEW:
         setCurrentControlStep(CONTROL_STEP.BLEND);
         break;
+      case CONTROL_STEP.BLEND:
+        setShareModalVisible(true);
+        break;
       default:
         break;
     }
   }, [currentControlStep, originImage, newImage]);
 
-  // Event halder for left button in the footer
+  // Event handler for left button in the footer
   const backToPrevStep = useCallback(() => {
     switch (currentControlStep) {
       case CONTROL_STEP.ADDJUST:
@@ -297,10 +262,12 @@ export function ViewController(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentControlStep, props.navigation]);
 
+  // Event handler for camera image button
   const handleControlBtnClicked = useCallback(() => {
     switch (currentControlStep) {
       case CONTROL_STEP.ADDJUST:
-        takePicture();
+        // takePicture();
+        setTakingPicture(true);
         break;
       case CONTROL_STEP.ROTATE:
         setNewImage({
@@ -317,49 +284,32 @@ export function ViewController(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentControlStep, newImage]);
 
-  // update blend mode
+  // Update blend mode
   const updateBlendMode = useCallback((updatedBlendMode) => {
     setBlendMode(updatedBlendMode);
   }, []);
 
-  // take a picture by camera
-  const takePicture = async () => {
-    if (cameraEleRef && !takingPicture) {
-      setTakingPicture(true);
-      Animated.timing(slide2RightAnim, {
-        toValue: -(deviceWitdh / 2 - 50),
-        duration: 500,
-        useNativeDriver: false,
-      }).start();
-      Animated.timing(slide2LeftAnim, {
-        toValue: deviceWitdh / 2 - 50,
-        duration: 500,
-        useNativeDriver: false,
-      }).start();
+  // Get a picture by camera
+  const getPictureByCamera = useCallback((data) => {
+    setNewImage({ rotate: 0, uri: data.uri });
+    setTakingPicture(false);
+    setCurrentControlStep(CONTROL_STEP.ROTATE);
+  }, []);
 
-      const options = { quality: 0.5, base64: true };
-      const data = await cameraEleRef.takePictureAsync(options);
-      setNewImage({ rotate: 0, uri: data.uri });
-
-      setTimeout(() => {
-        setTakingPicture(false);
-        Animated.timing(slide2RightAnim, {
-          toValue: -(deviceWitdh + 150),
-          duration: 500,
-          useNativeDriver: false,
-        }).start();
-        Animated.timing(slide2LeftAnim, {
-          toValue: deviceWitdh + 50,
-          duration: 500,
-          useNativeDriver: false,
-        }).start();
-
-        setTimeout(() => {
-          setCurrentControlStep(CONTROL_STEP.ROTATE);
-        }, 1000);
-      }, 1000);
-    }
-  };
+  // Event handler when the share modal is closed
+  const closeShareModal = useCallback(
+    (nextStep) => {
+      if (nextStep === CONTROL_STEP.HOME) {
+        props.navigation.navigate('Home');
+      } else if (nextStep === CONTROL_STEP.ADDJUST) {
+        initializeImages();
+        setPreviewControlStep(CONTROL_STEP.SHARE);
+        setCurrentControlStep(CONTROL_STEP.ADDJUST);
+      }
+      setShareModalVisible(false);
+    },
+    [props.navigation],
+  );
 
   // Upload a picture from photos or gallery
   const uploadPictureFromGallery = () => {
@@ -390,14 +340,7 @@ export function ViewController(props) {
 
   // Delete the current taken pictures
   const deleteCurrentJustapose = () => {
-    setOriginImage({
-      rotate: 0,
-      uri: '',
-    });
-    setNewImage({
-      rotate: 0,
-      uri: '',
-    });
+    initializeImages();
     setCurrentControlStep(CONTROL_STEP.HOME);
     props.navigation.navigate('Home');
   };
@@ -407,20 +350,17 @@ export function ViewController(props) {
     captureScreen({
       width: deviceWitdh,
       height: deviceHeight,
-      // Either png or jpg (or webm Android Only), Defaults: png
-      format: 'jpg',
-      // Quality 0.0 - 1.0 (only available for jpg)
+      format: 'jpg', // default: png
       quality: 0.8,
     }).then(
-      //callback function to get the result URL of the screnshot
       (uri) => {
         // Store two pictures info before mixing
         setMixedImages([originImage, newImage]);
 
         // Crop a taken screenshot to get only image view
         const cropData = {
-          offset: { x: 0, y: 230 },
-          size: { width: deviceWitdh * 2, height: deviceWitdh * 2 },
+          offset: { x: 30, y: 232 },
+          size: { width: (deviceWitdh - 30) * 2, height: (deviceWitdh - 30) * 2 },
           // // Size to which you want to scale the cropped image
           // displaySize: { width: deviceWitdh, height: deviceWitdh },
           // resizeMode: 'contain' | 'cover' | 'stretch',
@@ -428,15 +368,7 @@ export function ViewController(props) {
 
         ImageEditor.cropImage(uri, cropData).then(
           (url) => {
-            //
-            setOriginImage({
-              rotate: 0,
-              uri: url,
-            });
-            setNewImage({
-              rotate: 0,
-              uri: '',
-            });
+            initializeImages(url);
 
             setPreviewControlStep(currentControlStep);
             setCurrentControlStep(CONTROL_STEP.ADDJUST);
@@ -448,52 +380,42 @@ export function ViewController(props) {
     );
   };
 
+  const initializeImages = (originUri = '', newUri = '') => {
+    setOriginImage({
+      rotate: 0,
+      uri: originUri,
+    });
+    setNewImage({
+      rotate: 0,
+      uri: newUri,
+    });
+  };
+
   return (
     <SafeAreaView style={styles.screen}>
       {/*   Header   */}
       <Header />
 
       {/*   Content   */}
-      <View>
-        {/*   Camera Controls   */}
-        {isShowCameraPreview && (
-          <View style={styles.cameraControls}>
-            <TouchableWithoutFeedback onPress={changeFlashType}>
-              <Image source={FLASH_IMAGES[flashType]} resizeMode="contain" style={styles.flashType} />
-            </TouchableWithoutFeedback>
-            <TouchableWithoutFeedback onPress={changeCameraType}>
-              <Image source={images.flip} resizeMode="contain" style={styles.cameraType} />
-            </TouchableWithoutFeedback>
-          </View>
-        )}
-
+      <View style={styles.content}>
         {!isShowBlendMode && (
-          <View style={styles.cameraPreviewContainer}>
+          <React.Fragment>
             {/*   Camera Preview   */}
             {isShowCameraPreview && (
-              <RNCamera
-                ref={(ref) => {
-                  if (ref) {
-                    cameraEleRef = ref;
-                  }
-                }}
-                style={styles.cameraPreview}
-                type={RNCamera.Constants.Type[cameraType]}
-                flashMode={RNCamera.Constants.FlashMode[flashType]}
+              <CameraPreview
+                isTakingPicture={takingPicture}
+                overlayImage={{ ...originImage, opacity: justOpacity }}
+                onSucceed={getPictureByCamera}
               />
             )}
 
             {isShowNewImage && (
-              <View
-                style={{
-                  ...styles.imagePreviewWrapper,
-                  transform: [{ rotate: `${newImage.rotate}deg` }],
-                }}>
+              <View style={styles.imagePreviewWrapper}>
                 {newImage.uri !== '' && (
                   <Image
                     source={{ isStatic: true, uri: newImage.uri }}
                     resizeMode="contain"
-                    style={styles.imagePreview}
+                    style={{ ...styles.imagePreview, transform: [{ rotate: `${newImage.rotate}deg` }] }}
                   />
                 )}
               </View>
@@ -503,42 +425,22 @@ export function ViewController(props) {
               <View
                 // eslint-disable-next-line react-native/no-inline-styles
                 style={{
-                  marginTop: isShowCameraPreview || isShowNewImage ? -(deviceWitdh + 28) : 0,
+                  marginTop: isShowCameraPreview || isShowNewImage ? -deviceWitdh : 0,
                   opacity: originImage.uri ? justOpacity : 1,
                 }}>
                 {/*   Image Preview   */}
                 {originImage.uri !== '' && (
-                  <View
-                    style={{
-                      ...styles.imagePreviewWrapper,
-                      transform: [{ rotate: `${originImage.rotate}deg` }],
-                    }}>
+                  <View style={styles.imagePreviewWrapper}>
                     <Image
                       source={{ isStatic: true, uri: originImage.uri }}
                       resizeMode="contain"
-                      style={styles.imagePreview}
+                      style={{ ...styles.imagePreview, transform: [{ rotate: `${originImage.rotate}deg` }] }}
                     />
                   </View>
                 )}
               </View>
             )}
-
-            {/*   Taking a Picture Animation   */}
-            {isShowCameraPreview && (
-              <View style={styles.takingPicture}>
-                <Animated.View style={{ ...styles.takingPictureGreen, marginLeft: slide2RightAnim }}>
-                  <View style={styles.takingPictureGreenHide}>
-                    <Image source={images.bigGreen} style={styles.takingPictureGreen} />
-                  </View>
-                </Animated.View>
-                <Animated.View style={{ ...styles.takingPictureOrange, marginLeft: slide2LeftAnim }}>
-                  <View style={styles.takingPictureOrangeHide}>
-                    <Image source={images.bigOrange} style={styles.takingPictureOrange} />
-                  </View>
-                </Animated.View>
-              </View>
-            )}
-          </View>
+          </React.Fragment>
         )}
 
         {isShowBlendMode && (
@@ -592,6 +494,9 @@ export function ViewController(props) {
         </View>
 
         {isShowBlendMode && <BlendModesList onBlendModeChanged={updateBlendMode} />}
+
+        {/*   Modal   */}
+        <SharePreviewModal modalVisible={shareModalVisible} finalImage={originImage} onModalClosed={closeShareModal} />
       </View>
     </SafeAreaView>
   );

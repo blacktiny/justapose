@@ -27,6 +27,10 @@ export const styles = StyleSheet.create({
   },
 
   // Content
+  content: {
+    width: deviceWitdh - 30,
+    marginHorizontal: 15,
+  },
   cameraControls: {
     display: 'flex',
     flexDirection: 'row',
@@ -43,22 +47,41 @@ export const styles = StyleSheet.create({
     width: 28,
     height: 28,
   },
-  cameraPreviewWrapper: {
-    display: 'flex',
-    alignItems: 'center',
-    position: 'relative',
-    width: deviceWitdh,
-    height: deviceWitdh,
-  },
   cameraPreviewContainer: {
     position: 'relative',
-    width: deviceWitdh,
-    height: deviceWitdh,
+    width: deviceWitdh - 30,
+    height: deviceWitdh - 30,
   },
   cameraPreview: {
     width: '100%',
     height: '100%',
   },
+  overlayImagePreview: {
+    position: 'absolute',
+    top: 0,
+    width: deviceWitdh - 30,
+    height: deviceWitdh - 30,
+  },
+  imagePreviewWrapper: {
+    position: 'relative',
+    width: deviceWitdh - 30,
+    height: deviceWitdh - 30,
+    marginTop: 30,
+  },
+  imageBlendPreviewWrapper: {
+    width: deviceWitdh - 30,
+    height: deviceWitdh - 30,
+    marginTop: 30,
+    padding: 0,
+    backgroundColor: 'green',
+  },
+  imagePreview: {
+    margin: 0,
+    width: deviceWitdh - 30,
+    height: deviceWitdh - 30,
+  },
+
+  // Taking Picture Animation
   takingPicture: {
     width: '100%',
     height: '100%',
@@ -78,15 +101,6 @@ export const styles = StyleSheet.create({
     width: deviceWitdh * 1.3,
     height: deviceWitdh * 1.3,
     marginTop: -deviceWitdh * 0.7,
-  },
-  imagePreviewWrapper: {
-    width: deviceWitdh,
-    height: deviceWitdh,
-    marginTop: 30,
-  },
-  imagePreview: {
-    width: deviceWitdh,
-    height: deviceWitdh,
   },
 
   // Opacity Slider
