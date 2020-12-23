@@ -2,7 +2,9 @@ const bigGreen = require('./big_green.png');
 const bigOrange = require('./big_orange.png');
 const buttonBack = require('./button_back.png');
 const buttonCamera = require('./button_camera.png');
+const buttonCameraAdd = require('./button_camera_add.png');
 const buttonCancel = require('./button_cancel.png');
+const buttonDone = require('./button_done.png');
 const buttonHome = require('./button_home.png');
 const buttonNext = require('./button_next.png');
 const buttonSave = require('./button_save.png');
@@ -21,6 +23,7 @@ const screenHome = require('./screen_home.png');
 const addAnother = require('./addAnother.png');
 const adjustTrans = require('./adjustTrans.png');
 const saveit = require('./saveit.png');
+const shareIt = require('./shareIt.png');
 const tutShoot = require('./tutShoot.png');
 // Blend Mode
 const blendBurn = require('./blendMode/blendBurn.png');
@@ -39,13 +42,18 @@ const blendOverlay = require('./blendMode/blendOverlay.png');
 const blendScreen = require('./blendMode/blendScreen.png');
 const blendSharp = require('./blendMode/blendSharp.png');
 const blendSteep = require('./blendMode/blendSteep.png');
+// Transparency Slider
+const opaque = require('./opaque.png');
+const transparent = require('./transparent.png');
 
 export default {
   bigGreen,
   bigOrange,
   buttonBack,
   buttonCamera,
+  buttonCameraAdd,
   buttonCancel,
+  buttonDone,
   buttonHome,
   buttonNext,
   buttonSave,
@@ -64,6 +72,7 @@ export default {
   addAnother,
   adjustTrans,
   saveit,
+  shareIt,
   tutShoot,
   // Blend Mode
   blendBurn,
@@ -82,4 +91,7 @@ export default {
   blendScreen,
   blendSharp,
   blendSteep,
+  // Transparency Slider
+  opaque,
+  transparent,
 };

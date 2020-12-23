@@ -5,7 +5,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Dimensions, Image, Modal, View, TouchableWithoutFeedback, SafeAreaView } from 'react-native';
+import { Alert, Dimensions, Image, View, TouchableWithoutFeedback, SafeAreaView } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Slider from 'react-native-slider';
@@ -27,8 +27,9 @@ export const CONTROL_STEP = {
   ADDJUST: '2-JustAPose',
   ROTATE: '3-Rotate',
   PREVIEW: '4-Preview',
-  BLEND: '5-Blend',
-  SHARE: '6-Share',
+  BLENDANDSAVE: '5-BlendAndSave',
+  DONE: '6-Done',
+  SHARE: '7-Share',
 };
 
 export function Header() {
@@ -52,7 +53,8 @@ export function ViewController(props) {
     rotate: 0,
     uri: '',
   });
-  const [mixedImages, setMixedImages] = useState([]);
+  const [mixedImage, setMixedImage] = useState({});
+  const [mixedOriginImages, setMixedOriginImages] = useState([]);
   const [controlTooltipInfo, setControlTooltipInfo] = useState({
     addAnother: false,
     saveit: false,
@@ -112,13 +114,13 @@ export function ViewController(props) {
           tutShoot: false,
         });
         setFooterControlBtn({
-          image: images.buttonCamera,
+          image: images.buttonCameraAdd,
           style: styles.cameraImage,
         });
         setFooterRightBtnImg(images.buttonNext);
         setFooterLeftBtnImg(images.buttonHome);
         break;
-      case CONTROL_STEP.BLEND:
+      case CONTROL_STEP.BLENDANDSAVE:
         setControlTooltipInfo({
           addAnother: false,
           saveit: false,
@@ -126,6 +128,16 @@ export function ViewController(props) {
         });
         setFooterControlBtn(null);
         setFooterRightBtnImg(images.buttonSave);
+        setFooterLeftBtnImg(images.buttonBack);
+        break;
+      case CONTROL_STEP.DONE:
+        setControlTooltipInfo({
+          addAnother: false,
+          saveit: false,
+          tutShoot: false,
+        });
+        setFooterControlBtn(null);
+        setFooterRightBtnImg(images.buttonDone);
         setFooterLeftBtnImg(images.buttonBack);
         break;
       default:
@@ -164,7 +176,10 @@ export function ViewController(props) {
         showOriginImage = true;
         showNewImage = true;
         break;
-      case CONTROL_STEP.BLEND:
+      case CONTROL_STEP.BLENDANDSAVE:
+        showBlendMode = true;
+        break;
+      case CONTROL_STEP.DONE:
         showBlendMode = true;
         break;
       default:
@@ -201,14 +216,18 @@ export function ViewController(props) {
         }
         break;
       case CONTROL_STEP.PREVIEW:
-        setCurrentControlStep(CONTROL_STEP.BLEND);
+        setCurrentControlStep(CONTROL_STEP.BLENDANDSAVE);
         break;
-      case CONTROL_STEP.BLEND:
+      case CONTROL_STEP.BLENDANDSAVE:
+        takeScreenShot();
+        break;
+      case CONTROL_STEP.DONE:
         setShareModalVisible(true);
         break;
       default:
         break;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentControlStep, originImage, newImage]);
 
   // Event handler for left button in the footer
@@ -224,9 +243,9 @@ export function ViewController(props) {
           });
         } else if (previewControlStep === CONTROL_STEP.PREVIEW) {
           setCurrentControlStep(previewControlStep);
-          setOriginImage(mixedImages[0]);
-          setNewImage(mixedImages[1]);
-          setMixedImages([]);
+          setOriginImage(mixedOriginImages[0]);
+          setNewImage(mixedOriginImages[1]);
+          setMixedOriginImages([]);
         } else {
           props.navigation.navigate('Home');
         }
@@ -253,7 +272,10 @@ export function ViewController(props) {
           },
         );
         break;
-      case CONTROL_STEP.BLEND:
+      case CONTROL_STEP.BLENDANDSAVE:
+        setCurrentControlStep(CONTROL_STEP.PREVIEW);
+        break;
+      case CONTROL_STEP.DONE:
         setCurrentControlStep(CONTROL_STEP.PREVIEW);
         break;
       default:
@@ -298,7 +320,7 @@ export function ViewController(props) {
 
   // Event handler when the share modal is closed
   const closeShareModal = useCallback(
-    (nextStep) => {
+    (nextStep = '') => {
       if (nextStep === CONTROL_STEP.HOME) {
         props.navigation.navigate('Home');
       } else if (nextStep === CONTROL_STEP.ADDJUST) {
@@ -355,7 +377,7 @@ export function ViewController(props) {
     }).then(
       (uri) => {
         // Store two pictures info before mixing
-        setMixedImages([originImage, newImage]);
+        setMixedOriginImages([originImage, newImage]);
 
         // Crop a taken screenshot to get only image view
         const cropData = {
@@ -368,10 +390,16 @@ export function ViewController(props) {
 
         ImageEditor.cropImage(uri, cropData).then(
           (url) => {
-            initializeImages(url);
+            setMixedImage({ rotate: 0, uri: url });
 
-            setPreviewControlStep(currentControlStep);
-            setCurrentControlStep(CONTROL_STEP.ADDJUST);
+            if (currentControlStep === CONTROL_STEP.BLENDANDSAVE) {
+              saveMixedImage();
+            } else {
+              initializeImages(url);
+
+              setPreviewControlStep(currentControlStep);
+              setCurrentControlStep(CONTROL_STEP.ADDJUST);
+            }
           },
           (error) => console.error('Oops, Something Went Wrong', error),
         );
@@ -389,6 +417,30 @@ export function ViewController(props) {
       rotate: 0,
       uri: newUri,
     });
+    setMixedImage({
+      rotate: 0,
+      uri: newUri,
+    });
+  };
+
+  // Save the completed images to redux store
+  const saveMixedImage = () => {
+    if (mixedImage.uri) {
+      console.log('uri = ', mixedImage.uri);
+      Alert.alert('The image was saved successfully.', '', [
+        { text: 'OK', onPress: () => setCurrentControlStep(CONTROL_STEP.DONE) },
+      ]);
+    }
+  };
+
+  const sliderOptions = {
+    minimumTrackTintColor: 'lightgrey',
+    maximumTrackTintColor: 'darkgrey',
+    style: {
+      width: deviceWitdh - 90,
+      backgroundColor: 'linear-gradient(#f0f0f0, #0f0f0f)',
+      marginHorizontal: 10,
+    },
   };
 
   return (
@@ -455,9 +507,13 @@ export function ViewController(props) {
       </View>
 
       {isShowOpacitySlider && (
-        <View style={styles.opacitySliderContainer}>
+        <View style={styles.opacitySliderWrapper}>
           <Image source={images.adjustTrans} resizeMode="contain" style={styles.adjustTransTip} />
-          <Slider value={justOpacity} onValueChange={(value) => setJustOpacity(value)} />
+          <View style={styles.opacitySliderContainer}>
+            <Image source={images.transparent} resizeMode="contain" style={styles.transparencySliderImage} />
+            <Slider value={justOpacity} onValueChange={(value) => setJustOpacity(value)} {...sliderOptions} />
+            <Image source={images.opaque} resizeMode="contain" style={styles.transparencySliderImage} />
+          </View>
         </View>
       )}
 
@@ -494,10 +550,14 @@ export function ViewController(props) {
         </View>
 
         {isShowBlendMode && <BlendModesList onBlendModeChanged={updateBlendMode} />}
-
-        {/*   Modal   */}
-        <SharePreviewModal modalVisible={shareModalVisible} finalImage={originImage} onModalClosed={closeShareModal} />
       </View>
+
+      {/*   Modal   */}
+      <SharePreviewModal
+        modalVisible={shareModalVisible}
+        finalImage={mixedImage}
+        onModalClosed={(nextStep) => closeShareModal(nextStep)}
+      />
     </SafeAreaView>
   );
 }
