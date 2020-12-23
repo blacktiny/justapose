@@ -3,6 +3,8 @@ import { StyleSheet, Dimensions } from 'react-native';
 const deviceWitdh = Dimensions.get('window').width;
 const deviceHeight = Dimensions.get('window').height;
 
+const isSmallDevice = deviceHeight < 800;
+
 export const styles = StyleSheet.create({
   screen: {
     position: 'relative',
@@ -104,7 +106,7 @@ export const styles = StyleSheet.create({
   },
 
   // Opacity Slider
-  opacitySliderContainer: {
+  opacitySliderWrapper: {
     width: deviceWitdh - 30,
     marginLeft: 15,
     marginRight: 15,
@@ -112,38 +114,59 @@ export const styles = StyleSheet.create({
   adjustTransTip: {
     width: deviceWitdh,
     height: 40,
-    marginTop: -20,
+    marginTop: isSmallDevice ? -40 : -30,
+  },
+  opacitySliderContainer: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  transparencySliderImage: {
+    width: 20,
+    height: 20,
   },
 
   // Footer
   footer: {
     width: deviceWitdh,
-    height: 150,
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    bottom: 30,
+    bottom: isSmallDevice ? 15 : 30,
   },
+
   // Tip
   addAnotherTip: {
+    position: 'absolute',
+    bottom: isSmallDevice ? 100 : 115,
+    right: 40,
     width: deviceWitdh,
-    height: 50,
-    marginLeft: -deviceWitdh * 0.2,
+    height: isSmallDevice ? 45 : 50,
   },
   saveitTip: {
-    height: 60,
-    marginLeft: deviceWitdh * 0.6,
-    marginTop: -50,
-    marginBottom: -10,
+    position: 'absolute',
+    bottom: isSmallDevice ? 85 : 107,
+    right: -10,
+    height: isSmallDevice ? 55 : 60,
+  },
+  shareItTip: {
+    position: 'absolute',
+    bottom: isSmallDevice ? 90 : 107,
+    right: isSmallDevice ? -80 : -60,
+    height: isSmallDevice ? 55 : 60,
   },
   tutShootTip: {
+    position: 'absolute',
+    bottom: isSmallDevice ? 80 : 100,
+    right: -50,
     width: deviceWitdh,
-    height: 60,
-    marginLeft: 100,
-    marginBottom: -10,
+    height: isSmallDevice ? 65 : 75,
   },
+
   // Control Buttons
   btnsGroupWrapper: {
     width: deviceWitdh,
@@ -157,19 +180,19 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: deviceWitdh / 3,
-    height: '100%',
+    height: isSmallDevice ? 90 : 100,
   },
   cameraImage: {
-    width: 200,
-    height: 100,
+    width: isSmallDevice ? 180 : 200,
+    height: isSmallDevice ? 90 : 100,
   },
   rotateImage: {
     width: 40,
     height: 40,
   },
   buttonImage: {
-    width: 57,
-    height: 57,
+    width: isSmallDevice ? 52 : 57,
+    height: isSmallDevice ? 52 : 57,
   },
 
   // Blend Mode
@@ -205,5 +228,17 @@ export const styles = StyleSheet.create({
     width: 30,
     height: 3,
     backgroundColor: 'grey',
+  },
+
+  // Modal
+  modalContentWrapper: {
+    position: 'relative',
+    width: deviceWitdh,
+    height: deviceHeight * (isSmallDevice ? 0.9 : 0.8),
+    paddingTop: isSmallDevice ? 5 : 10,
+    borderRadius: 10,
+  },
+  modalFooter: {
+    bottom: isSmallDevice ? 20 : 50,
   },
 });
