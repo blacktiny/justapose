@@ -11,6 +11,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // Screens
+import ImageGallery from '../ImageGallery';
 import Home from '../Home';
 import ViewController from '../ViewController';
 
@@ -19,6 +20,7 @@ const Stack = createStackNavigator();
 function RootStack() {
   return (
     <Stack.Navigator initialRouteName="Welcome">
+      <Stack.Screen name="ImageGallery" component={ImageGallery} options={{ headerShown: false }} />
       <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
       <Stack.Screen name="ViewController" component={ViewController} options={{ headerShown: false }} />
     </Stack.Navigator>

@@ -45,6 +45,8 @@ const blendSteep = require('./blendMode/blendSteep.png');
 // Transparency Slider
 const opaque = require('./opaque.png');
 const transparent = require('./transparent.png');
+// Image Gallery
+const previewBackground = require('./previewBackground.jpg');
 
 export default {
   bigGreen,
@@ -94,4 +96,6 @@ export default {
   // Transparency Slider
   opaque,
   transparent,
+  // Image Gallery
+  previewBackground,
 };
