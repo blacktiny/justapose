@@ -21,7 +21,7 @@ export function SharePreviewModal(props) {
       isOpen={modalVisible}
       onClosed={() => onModalClosed()}
       style={styles.modalContentWrapper}
-      swipeToClose={() => onModalClosed()}
+      swipeToClose={true}
       position={'bottom'}>
       <View style={styles.modalContentWrapper}>
         {/*   Header   */}

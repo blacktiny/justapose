@@ -84,7 +84,6 @@ export function CameraView(props) {
 
       const options = { quality: 0.5, base64: true };
       const data = await cameraEleRef.takePictureAsync(options);
-      // setNewImage({ rotate: 0, uri: data.uri });
 
       setTimeout(() => {
         setTakingPicture(false);

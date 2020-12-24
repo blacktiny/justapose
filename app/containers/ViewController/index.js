@@ -6,11 +6,13 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Dimensions, Image, View, TouchableWithoutFeedback, SafeAreaView } from 'react-native';
+import { useDispatch } from 'react-redux';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Slider from 'react-native-slider';
 import { captureScreen } from 'react-native-view-shot';
 import ImageEditor from '@react-native-community/image-editor';
+import RNFS from 'react-native-fs';
 
 import CameraPreview from './CameraPreview';
 import BlendModesList, { MIX_BLEND_MODES } from './BlendModesList';
@@ -18,9 +20,12 @@ import MixBlendImagePreview from './MixBlendImagePreview';
 import SharePreviewModal from './SharePreviewModal';
 import images from 'images';
 import { styles } from './styles';
+import { addNewImage } from './actions';
 
 const deviceWitdh = Dimensions.get('window').width;
 const deviceHeight = Dimensions.get('window').height;
+
+const galleryDirPath = RNFS.DocumentDirectoryPath + '/justapose/';
 
 export const CONTROL_STEP = {
   HOME: '1-Home',
@@ -80,6 +85,26 @@ export function ViewController(props) {
 
   // Share Modal
   const [shareModalVisible, setShareModalVisible] = useState(false);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    RNFS.readDir(galleryDirPath)
+      .then((files) => {
+        console.log('The folder "justapose" exist.');
+      })
+      .catch((err) => {
+        console.log('err = ', err);
+
+        RNFS.mkdir(galleryDirPath)
+          .then(() => {
+            console.log('/Documents/justapose directory was created successfully.');
+          })
+          .catch((error) => {
+            console.log('err = ', error);
+          });
+      });
+  }, []);
 
   useEffect(() => {
     switch (currentControlStep) {
@@ -247,7 +272,7 @@ export function ViewController(props) {
           setNewImage(mixedOriginImages[1]);
           setMixedOriginImages([]);
         } else {
-          props.navigation.navigate('Home');
+          props.navigation.navigate('ImageGallery');
         }
         break;
       case CONTROL_STEP.ROTATE:
@@ -322,7 +347,7 @@ export function ViewController(props) {
   const closeShareModal = useCallback(
     (nextStep = '') => {
       if (nextStep === CONTROL_STEP.HOME) {
-        props.navigation.navigate('Home');
+        props.navigation.navigate('ImageGallery');
       } else if (nextStep === CONTROL_STEP.ADDJUST) {
         initializeImages();
         setPreviewControlStep(CONTROL_STEP.SHARE);
@@ -364,7 +389,7 @@ export function ViewController(props) {
   const deleteCurrentJustapose = () => {
     initializeImages();
     setCurrentControlStep(CONTROL_STEP.HOME);
-    props.navigation.navigate('Home');
+    props.navigation.navigate('ImageGallery');
   };
 
   // Take a screenshot
@@ -390,10 +415,8 @@ export function ViewController(props) {
 
         ImageEditor.cropImage(uri, cropData).then(
           (url) => {
-            setMixedImage({ rotate: 0, uri: url });
-
             if (currentControlStep === CONTROL_STEP.BLENDANDSAVE) {
-              saveMixedImage();
+              saveMixedImage(url);
             } else {
               initializeImages(url);
 
@@ -424,12 +447,24 @@ export function ViewController(props) {
   };
 
   // Save the completed images to redux store
-  const saveMixedImage = () => {
-    if (mixedImage.uri) {
-      console.log('uri = ', mixedImage.uri);
-      Alert.alert('The image was saved successfully.', '', [
-        { text: 'OK', onPress: () => setCurrentControlStep(CONTROL_STEP.DONE) },
-      ]);
+  const saveMixedImage = async (url) => {
+    if (url) {
+      // get image file name
+      const fileName = url.split('/').pop();
+
+      // move image from tmp to /Documents/justapose
+      await RNFS.moveFile(url, galleryDirPath + fileName)
+        .then(() => {
+          setMixedImage({ rotate: 0, uri: galleryDirPath + fileName });
+          dispatch(addNewImage(galleryDirPath + fileName));
+
+          Alert.alert('The image was saved successfully.', '', [
+            { text: 'OK', onPress: () => setCurrentControlStep(CONTROL_STEP.DONE) },
+          ]);
+        })
+        .catch((err) => {
+          console.log(err.message);
+        });
     }
   };
 
@@ -478,7 +513,7 @@ export function ViewController(props) {
                 // eslint-disable-next-line react-native/no-inline-styles
                 style={{
                   marginTop: isShowCameraPreview || isShowNewImage ? -deviceWitdh : 0,
-                  opacity: originImage.uri ? justOpacity : 1,
+                  opacity: originImage.uri !== '' ? justOpacity : 1,
                 }}>
                 {/*   Image Preview   */}
                 {originImage.uri !== '' && (
