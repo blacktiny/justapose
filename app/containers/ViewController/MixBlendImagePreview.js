@@ -29,14 +29,21 @@ import { BLEND_MODE_TYPES } from './BlendModesList';
 import { styles } from './styles';
 
 export function MixBlendImagePreview(props) {
-  const { originImage, newImage, blendMode } = props;
+  const { originImage, newImage, blendMode, extractImageEnabled, onExtractImage } = props;
 
   const getOptions = () => {
     return {
       dstImage: renderOriginImage(),
-      dstTransform: { scale: 'CONTAIN', rotate: `${originImage.rotate}deg` },
+      dstTransform: {
+        scale: 'CONTAIN',
+        rotate: `${originImage.rotate + 180}deg`,
+      },
       srcImage: renderNewImage(),
       srcTransform: { scale: 'CONTAIN', rotate: `${newImage.rotate}deg` },
+      onExtractImage: ({ nativeEvent }) => {
+        onExtractImage(nativeEvent.uri);
+      },
+      extractImageEnabled: extractImageEnabled,
     };
   };
 
@@ -100,8 +107,8 @@ export function MixBlendImagePreview(props) {
       default:
         return (
           <React.Fragment>
-            {renderNewImage('absolute')}
             {renderOriginImage()}
+            {renderNewImage('absolute')}
           </React.Fragment>
         );
     }

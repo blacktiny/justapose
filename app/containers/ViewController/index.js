@@ -58,13 +58,17 @@ export function ViewController(props) {
     rotate: 0,
     uri: '',
   });
-  const [mixedImage, setMixedImage] = useState({});
+  const [mixedImage, setMixedImage] = useState({
+    rotate: 0,
+    uri: '',
+  });
   const [mixedOriginImages, setMixedOriginImages] = useState([]);
   const [controlTooltipInfo, setControlTooltipInfo] = useState({
     addAnother: false,
     saveit: false,
     tutShoot: false,
   });
+  const [extractImageEnabled, setExtractImageEnabled] = useState(false);
 
   // In Add New Just A Pose Image Step
   const [takingPicture, setTakingPicture] = useState(false);
@@ -171,6 +175,14 @@ export function ViewController(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentControlStep]);
 
+  useEffect(() => {
+    if (extractImageEnabled && mixedImage.uri !== '') {
+      saveMixedImage(mixedImage.uri);
+      setExtractImageEnabled(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extractImageEnabled, mixedImage]);
+
   const {
     isShowCameraPreview,
     isShowOriginImage,
@@ -244,7 +256,7 @@ export function ViewController(props) {
         setCurrentControlStep(CONTROL_STEP.BLENDANDSAVE);
         break;
       case CONTROL_STEP.BLENDANDSAVE:
-        takeScreenShot();
+        setExtractImageEnabled(true);
         break;
       case CONTROL_STEP.DONE:
         setShareModalVisible(true);
@@ -252,7 +264,6 @@ export function ViewController(props) {
       default:
         break;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentControlStep, originImage, newImage]);
 
   // Event handler for left button in the footer
@@ -415,14 +426,10 @@ export function ViewController(props) {
 
         ImageEditor.cropImage(uri, cropData).then(
           (url) => {
-            if (currentControlStep === CONTROL_STEP.BLENDANDSAVE) {
-              saveMixedImage(url);
-            } else {
-              initializeImages(url);
+            initializeImages(url);
 
-              setPreviewControlStep(currentControlStep);
-              setCurrentControlStep(CONTROL_STEP.ADDJUST);
-            }
+            setPreviewControlStep(currentControlStep);
+            setCurrentControlStep(CONTROL_STEP.ADDJUST);
           },
           (error) => console.error('Oops, Something Went Wrong', error),
         );
@@ -536,6 +543,10 @@ export function ViewController(props) {
               originImage={{ ...originImage, opacity: justOpacity }}
               newImage={newImage}
               blendMode={blendMode}
+              extractImageEnabled={extractImageEnabled}
+              onExtractImage={(uri) => {
+                setMixedImage({ rotate: 0, uri: uri });
+              }}
             />
           </View>
         )}
