@@ -8,6 +8,7 @@
 // Import all the third party stuff
 import React from 'react';
 import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 
 // Import root app
 import App from './containers/App';
@@ -18,14 +19,16 @@ import { translationMessages } from './i18n';
 
 // Create redux store with history
 const initialState = {};
-const store = configureStore(initialState);
+const { store, persistor } = configureStore(initialState);
 
 function AppRoot() {
   return (
     <Provider store={store}>
-      <LanguageProvider messages={translationMessages}>
-        <App />
-      </LanguageProvider>
+      <PersistGate loading={null} persistor={persistor}>
+        <LanguageProvider messages={translationMessages}>
+          <App />
+        </LanguageProvider>
+      </PersistGate>
     </Provider>
   );
 }

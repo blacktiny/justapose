@@ -4,7 +4,15 @@
 
 import { createStore, applyMiddleware, compose } from 'redux';
 import createSagaMiddleware from 'redux-saga';
+import { persistStore, persistReducer } from 'redux-persist';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import createReducer from './reducers';
+
+const persistConfig = {
+  key: 'justapose',
+  storage: AsyncStorage,
+};
 
 export default function configureStore(initialState = {}) {
   let composeEnhancers = compose;
@@ -18,7 +26,10 @@ export default function configureStore(initialState = {}) {
 
   const enhancers = [applyMiddleware(...middlewares)];
 
-  const store = createStore(createReducer(), initialState, composeEnhancers(...enhancers));
+  const persistedReducer = persistReducer(persistConfig, createReducer());
+
+  const store = createStore(persistedReducer, initialState, composeEnhancers(...enhancers));
+  let persistor = persistStore(store);
 
   // Extensions
   store.runSaga = sagaMiddleware.run;
@@ -33,5 +44,5 @@ export default function configureStore(initialState = {}) {
     });
   }
 
-  return store;
+  return { store, persistor };
 }
