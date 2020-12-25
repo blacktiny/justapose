@@ -4,14 +4,13 @@
  *
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { createRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Dimensions, Image, View, TouchableWithoutFeedback, SafeAreaView } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Slider from 'react-native-slider';
-import { captureScreen } from 'react-native-view-shot';
-import ImageEditor from '@react-native-community/image-editor';
+import ViewShot from 'react-native-view-shot';
 import RNFS from 'react-native-fs';
 
 import CameraPreview from './CameraPreview';
@@ -23,7 +22,6 @@ import { styles } from './styles';
 import { addNewImage } from './actions';
 
 const deviceWitdh = Dimensions.get('window').width;
-const deviceHeight = Dimensions.get('window').height;
 
 const galleryDirPath = RNFS.DocumentDirectoryPath + '/justapose/';
 
@@ -90,9 +88,12 @@ export function ViewController(props) {
   // Share Modal
   const [shareModalVisible, setShareModalVisible] = useState(false);
 
+  let viewShotRef = createRef();
+
   const dispatch = useDispatch();
 
   useEffect(() => {
+    console.log(RNFS.DocumentDirectoryPath);
     RNFS.readDir(galleryDirPath)
       .then((files) => {
         console.log('The folder "justapose" exist.');
@@ -334,7 +335,19 @@ export function ViewController(props) {
         });
         break;
       case CONTROL_STEP.PREVIEW:
-        takeScreenShot();
+        if (viewShotRef) {
+          viewShotRef.capture().then((uri) => {
+            console.log('capture uri = ', uri);
+            if (uri) {
+              setMixedOriginImages([originImage, newImage]);
+              initializeImages(uri);
+
+              setPreviewControlStep(currentControlStep);
+              setCurrentControlStep(CONTROL_STEP.ADDJUST);
+            }
+          });
+        }
+        // takeScreenShot();
         break;
       default:
         break;
@@ -403,41 +416,6 @@ export function ViewController(props) {
     props.navigation.navigate('ImageGallery');
   };
 
-  // Take a screenshot
-  const takeScreenShot = () => {
-    captureScreen({
-      width: deviceWitdh,
-      height: deviceHeight,
-      format: 'jpg', // default: png
-      quality: 0.8,
-    }).then(
-      (uri) => {
-        // Store two pictures info before mixing
-        setMixedOriginImages([originImage, newImage]);
-
-        // Crop a taken screenshot to get only image view
-        const cropData = {
-          offset: { x: 30, y: 232 },
-          size: { width: (deviceWitdh - 30) * 2, height: (deviceWitdh - 30) * 2 },
-          // // Size to which you want to scale the cropped image
-          // displaySize: { width: deviceWitdh, height: deviceWitdh },
-          // resizeMode: 'contain' | 'cover' | 'stretch',
-        };
-
-        ImageEditor.cropImage(uri, cropData).then(
-          (url) => {
-            initializeImages(url);
-
-            setPreviewControlStep(currentControlStep);
-            setCurrentControlStep(CONTROL_STEP.ADDJUST);
-          },
-          (error) => console.error('Oops, Something Went Wrong', error),
-        );
-      },
-      (error) => console.error('Oops, Something Went Wrong', error),
-    );
-  };
-
   const initializeImages = (originUri = '', newUri = '') => {
     setOriginImage({
       rotate: 0,
@@ -503,42 +481,50 @@ export function ViewController(props) {
               />
             )}
 
-            {isShowNewImage && (
-              <View style={styles.imagePreviewWrapper}>
-                {newImage.uri !== '' && (
-                  <Image
-                    source={{ isStatic: true, uri: newImage.uri }}
-                    resizeMode="cover"
-                    style={{ ...styles.imagePreview, transform: [{ rotate: `${newImage.rotate}deg` }] }}
-                  />
-                )}
-              </View>
-            )}
-
-            {isShowOriginImage && (
-              <View
-                // eslint-disable-next-line react-native/no-inline-styles
-                style={{
-                  marginTop: isShowCameraPreview || isShowNewImage ? -deviceWitdh : 0,
-                  opacity: originImage.uri !== '' ? justOpacity : 1,
-                }}>
-                {/*   Image Preview   */}
-                {originImage.uri !== '' && (
-                  <View style={styles.imagePreviewWrapper}>
+            <ViewShot
+              ref={(ref) => {
+                if (ref) {
+                  viewShotRef = ref;
+                }
+              }}
+              style={{ marginTop: isShowCameraPreview ? 0 : 30 }}
+              options={{ format: 'jpg', quality: 0.9 }}>
+              {isShowNewImage && (
+                <View style={styles.imagePreviewWrapper}>
+                  {newImage.uri !== '' && (
                     <Image
-                      source={{ isStatic: true, uri: originImage.uri }}
+                      source={{ isStatic: true, uri: newImage.uri }}
                       resizeMode="cover"
-                      style={{ ...styles.imagePreview, transform: [{ rotate: `${originImage.rotate}deg` }] }}
+                      style={{ ...styles.imagePreview, transform: [{ rotate: `${newImage.rotate}deg` }] }}
                     />
-                  </View>
-                )}
-              </View>
-            )}
+                  )}
+                </View>
+              )}
+
+              {isShowOriginImage && (
+                <View
+                  style={{
+                    marginTop: isShowCameraPreview || isShowNewImage ? -(deviceWitdh - 30) : 0,
+                    opacity: originImage.uri !== '' ? justOpacity : 1,
+                  }}>
+                  {/*   Image Preview   */}
+                  {originImage.uri !== '' && (
+                    <View style={styles.imagePreviewWrapper}>
+                      <Image
+                        source={{ isStatic: true, uri: originImage.uri }}
+                        resizeMode="cover"
+                        style={{ ...styles.imagePreview, transform: [{ rotate: `${originImage.rotate}deg` }] }}
+                      />
+                    </View>
+                  )}
+                </View>
+              )}
+            </ViewShot>
           </React.Fragment>
         )}
 
         {isShowBlendMode && (
-          <View style={styles.imagePreviewWrapper}>
+          <View style={styles.imageBlendPreviewWrapper}>
             <MixBlendImagePreview
               originImage={{ ...originImage, opacity: justOpacity }}
               newImage={newImage}

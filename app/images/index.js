@@ -4,6 +4,7 @@ const buttonBack = require('./button_back.png');
 const buttonCamera = require('./button_camera.png');
 const buttonCameraAdd = require('./button_camera_add.png');
 const buttonCancel = require('./button_cancel.png');
+const buttonDelete = require('./delete.png');
 const buttonDone = require('./button_done.png');
 const buttonHome = require('./button_home.png');
 const buttonNext = require('./button_next.png');
@@ -55,6 +56,7 @@ export default {
   buttonCamera,
   buttonCameraAdd,
   buttonCancel,
+  buttonDelete,
   buttonDone,
   buttonHome,
   buttonNext,

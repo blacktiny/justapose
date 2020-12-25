@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Image } from 'react-native';
+import { Image, View } from 'react-native';
 import {
   ColorBlend,
   ColorBurnBlend,
@@ -29,18 +29,19 @@ import { BLEND_MODE_TYPES } from './BlendModesList';
 import { styles } from './styles';
 
 export function MixBlendImagePreview(props) {
-  const { originImage, newImage, blendMode, extractImageEnabled, onExtractImage } = props;
+  const { originImage, newImage, blendMode = 'none', extractImageEnabled, onExtractImage } = props;
 
   const getOptions = () => {
     return {
       dstImage: renderOriginImage(),
       dstTransform: {
         scale: 'COVER',
-        rotate: `${originImage.rotate + 180}deg`,
+        rotate: `${originImage.rotate}deg`,
       },
       srcImage: renderNewImage(),
       srcTransform: { scale: 'COVER', rotate: `${newImage.rotate}deg` },
       onExtractImage: ({ nativeEvent }) => {
+        console.log('nativeEvent = ', nativeEvent);
         onExtractImage(nativeEvent.uri);
       },
       extractImageEnabled: extractImageEnabled,

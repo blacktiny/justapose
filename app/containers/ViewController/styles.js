@@ -68,14 +68,12 @@ export const styles = StyleSheet.create({
     position: 'relative',
     width: deviceWitdh - 30,
     height: deviceWitdh - 30,
-    marginTop: 30,
   },
   imageBlendPreviewWrapper: {
+    position: 'relative',
     width: deviceWitdh - 30,
     height: deviceWitdh - 30,
     marginTop: 30,
-    padding: 0,
-    backgroundColor: 'green',
   },
   imagePreview: {
     margin: 0,
