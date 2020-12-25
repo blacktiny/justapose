@@ -13,10 +13,10 @@ import { styles } from './styles';
 export function Home(props) {
   return (
     <SafeAreaView style={styles.screen}>
-      <Image source={images.screenHome} resizeMode="contain" style={styles.allPhoto} />
+      <Image source={images.screenHome} resizeMode="cover" style={styles.allPhoto} />
       <View style={styles.cemeraView}>
         <TouchableWithoutFeedback onPress={() => props.navigation.navigate('ViewController')}>
-          <Image source={images.buttonCamera} resizeMode="contain" style={styles.cameraImage} />
+          <Image source={images.buttonCamera} resizeMode="cover" style={styles.cameraImage} />
         </TouchableWithoutFeedback>
       </View>
     </SafeAreaView>

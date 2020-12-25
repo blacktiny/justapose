@@ -110,10 +110,10 @@ export function CameraView(props) {
       {/*   Camera Controls   */}
       <View style={styles.cameraControls}>
         <TouchableWithoutFeedback onPress={changeFlashType}>
-          <Image source={FLASH_IMAGES[flashType]} resizeMode="contain" style={styles.flashType} />
+          <Image source={FLASH_IMAGES[flashType]} resizeMode="cover" style={styles.flashType} />
         </TouchableWithoutFeedback>
         <TouchableWithoutFeedback onPress={changeCameraType}>
-          <Image source={images.flip} resizeMode="contain" style={styles.cameraType} />
+          <Image source={images.flip} resizeMode="cover" style={styles.cameraType} />
         </TouchableWithoutFeedback>
       </View>
 
@@ -138,7 +138,7 @@ export function CameraView(props) {
             }}>
             <Image
               source={{ isStatic: true, uri: overlayImage.uri }}
-              resizeMode="contain"
+              resizeMode="cover"
               style={styles.imagePreview}
             />
           </View>

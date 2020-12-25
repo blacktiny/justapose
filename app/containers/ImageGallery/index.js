@@ -27,14 +27,14 @@ export function ImageGallery(props) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <Image source={images.logo} resizeMode="contain" style={styles.logo} />
+      <Image source={images.logo} resizeMode="cover" style={styles.logo} />
 
       <ScrollView contentContainerStyle={styles.scrollView}>
         {gallery.length > 0 &&
           gallery.map((image, index) => {
             return (
               <TouchableOpacity style={styles.imageContainer} key={index}>
-                <Image source={{ uri: image }} resizeMode="contain" style={styles.galleryImage} />
+                <Image source={{ uri: image }} resizeMode="cover" style={styles.galleryImage} />
               </TouchableOpacity>
             );
           })}
@@ -44,14 +44,14 @@ export function ImageGallery(props) {
             .map((_value, index) => {
               return (
                 <View style={styles.imageContainer} key={index + DEFAULT_GALLERY_COUNT}>
-                  <Image source={images.previewBackground} resizeMode="contain" style={styles.galleryImage} />
+                  <Image source={images.previewBackground} resizeMode="cover" style={styles.galleryImage} />
                 </View>
               );
             })}
       </ScrollView>
 
       <TouchableWithoutFeedback onPress={() => props.navigation.navigate('ViewController')}>
-        <Image source={images.buttonCamera} resizeMode="contain" style={styles.cameraImage} />
+        <Image source={images.buttonCamera} resizeMode="cover" style={styles.cameraImage} />
       </TouchableWithoutFeedback>
     </SafeAreaView>
   );

@@ -35,11 +35,11 @@ export function MixBlendImagePreview(props) {
     return {
       dstImage: renderOriginImage(),
       dstTransform: {
-        scale: 'CONTAIN',
+        scale: 'COVER',
         rotate: `${originImage.rotate + 180}deg`,
       },
       srcImage: renderNewImage(),
-      srcTransform: { scale: 'CONTAIN', rotate: `${newImage.rotate}deg` },
+      srcTransform: { scale: 'COVER', rotate: `${newImage.rotate}deg` },
       onExtractImage: ({ nativeEvent }) => {
         onExtractImage(nativeEvent.uri);
       },
@@ -51,7 +51,7 @@ export function MixBlendImagePreview(props) {
     return (
       <Image
         source={{ isStatic: true, uri: originImage.uri }}
-        resizeMode="contain"
+        resizeMode="cover"
         style={{
           ...styles.imagePreview,
           opacity: originImage.opacity,
@@ -64,7 +64,7 @@ export function MixBlendImagePreview(props) {
     return (
       <Image
         source={{ isStatic: true, uri: newImage.uri }}
-        resizeMode="contain"
+        resizeMode="cover"
         style={{ ...styles.imagePreview, position }}
       />
     );
