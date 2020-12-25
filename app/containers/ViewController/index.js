@@ -40,8 +40,8 @@ export const CONTROL_STEP = {
 export function Header() {
   return (
     <View>
-      <Image source={images.logo} resizeMode="cover" style={styles.logo} />
-      <Image source={images.counter} resizeMode="cover" style={styles.counter} />
+      <Image source={images.logo} resizeMode="contain" style={styles.logo} />
+      <Image source={images.counter} resizeMode="contain" style={styles.counter} />
     </View>
   );
 }
@@ -554,11 +554,11 @@ export function ViewController(props) {
 
       {isShowOpacitySlider && (
         <View style={styles.opacitySliderWrapper}>
-          <Image source={images.adjustTrans} resizeMode="cover" style={styles.adjustTransTip} />
+          <Image source={images.adjustTrans} resizeMode="contain" style={styles.adjustTransTip} />
           <View style={styles.opacitySliderContainer}>
-            <Image source={images.transparent} resizeMode="cover" style={styles.transparencySliderImage} />
+            <Image source={images.transparent} resizeMode="contain" style={styles.transparencySliderImage} />
             <Slider value={justOpacity} onValueChange={(value) => setJustOpacity(value)} {...sliderOptions} />
-            <Image source={images.opaque} resizeMode="cover" style={styles.transparencySliderImage} />
+            <Image source={images.opaque} resizeMode="contain" style={styles.transparencySliderImage} />
           </View>
         </View>
       )}
@@ -567,30 +567,30 @@ export function ViewController(props) {
       <View style={styles.footer}>
         {/*   Control Tip Images   */}
         {controlTooltipInfo.addAnother && (
-          <Image source={images.addAnother} resizeMode="cover" style={styles.addAnotherTip} />
+          <Image source={images.addAnother} resizeMode="contain" style={styles.addAnotherTip} />
         )}
-        {controlTooltipInfo.saveit && <Image source={images.saveit} resizeMode="cover" style={styles.saveitTip} />}
+        {controlTooltipInfo.saveit && <Image source={images.saveit} resizeMode="contain" style={styles.saveitTip} />}
         {controlTooltipInfo.tutShoot && (
-          <Image source={images.tutShoot} resizeMode="cover" style={styles.tutShootTip} />
+          <Image source={images.tutShoot} resizeMode="contain" style={styles.tutShootTip} />
         )}
 
         {/*   Control Buttons   */}
         <View style={styles.btnsGroupWrapper}>
           <View style={styles.footerBtnWrapper}>
             <TouchableOpacity onPress={() => backToPrevStep()}>
-              <Image source={footerLeftBtnImg} resizeMode="cover" style={styles.buttonImage} />
+              <Image source={footerLeftBtnImg} resizeMode="contain" style={styles.buttonImage} />
             </TouchableOpacity>
           </View>
           {footerControlBtn && (
             <View style={styles.footerBtnWrapper}>
               <TouchableWithoutFeedback onPress={() => handleControlBtnClicked()}>
-                <Image source={footerControlBtn.image} resizeMode="cover" style={footerControlBtn.style} />
+                <Image source={footerControlBtn.image} resizeMode="contain" style={footerControlBtn.style} />
               </TouchableWithoutFeedback>
             </View>
           )}
           <View style={styles.footerBtnWrapper}>
             <TouchableOpacity onPress={() => gotoNextStep()}>
-              <Image source={footerRightBtnImg} resizeMode="cover" style={styles.buttonImage} />
+              <Image source={footerRightBtnImg} resizeMode="contain" style={styles.buttonImage} />
             </TouchableOpacity>
           </View>
         </View>

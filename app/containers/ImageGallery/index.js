@@ -27,7 +27,7 @@ export function ImageGallery(props) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <Image source={images.logo} resizeMode="cover" style={styles.logo} />
+      <Image source={images.logo} resizeMode="contain" style={styles.logo} />
 
       <ScrollView contentContainerStyle={styles.scrollView}>
         {gallery.length > 0 &&
@@ -51,7 +51,7 @@ export function ImageGallery(props) {
       </ScrollView>
 
       <TouchableWithoutFeedback onPress={() => props.navigation.navigate('ViewController')}>
-        <Image source={images.buttonCamera} resizeMode="cover" style={styles.cameraImage} />
+        <Image source={images.buttonCamera} resizeMode="contain" style={styles.cameraImage} />
       </TouchableWithoutFeedback>
     </SafeAreaView>
   );

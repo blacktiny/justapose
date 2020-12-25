@@ -37,23 +37,23 @@ export function SharePreviewModal(props) {
 
         {/*   Footer   */}
         <View style={{ ...styles.footer, ...styles.modalFooter }}>
-          <Image source={images.shareIt} resizeMode="cover" style={styles.shareItTip} />
+          <Image source={images.shareIt} resizeMode="contain" style={styles.shareItTip} />
 
           {/*   Control Buttons   */}
           <View style={styles.btnsGroupWrapper}>
             <View style={styles.footerBtnWrapper}>
               <TouchableOpacity onPress={() => onModalClosed(CONTROL_STEP.HOME)}>
-                <Image source={images.buttonHome} resizeMode="cover" style={styles.buttonImage} />
+                <Image source={images.buttonHome} resizeMode="contain" style={styles.buttonImage} />
               </TouchableOpacity>
             </View>
             <View style={styles.footerBtnWrapper}>
               <TouchableWithoutFeedback onPress={() => onModalClosed(CONTROL_STEP.ADDJUST)}>
-                <Image source={images.buttonCamera} resizeMode="cover" style={styles.cameraImage} />
+                <Image source={images.buttonCamera} resizeMode="contain" style={styles.cameraImage} />
               </TouchableWithoutFeedback>
             </View>
             <View style={styles.footerBtnWrapper}>
               <TouchableOpacity onPress={() => {}}>
-                <Image source={images.buttonShare} resizeMode="cover" style={styles.buttonImage} />
+                <Image source={images.buttonShare} resizeMode="contain" style={styles.buttonImage} />
               </TouchableOpacity>
             </View>
           </View>

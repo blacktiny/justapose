@@ -134,7 +134,7 @@ export function BlendModesList(props) {
         renderItem={({ item, index }) => {
           return (
             <TouchableWithoutFeedback onPress={() => selectBlendMode(index)}>
-              <Image source={item.image} resizeMode="cover" style={styles.blendModeImage} />
+              <Image source={item.image} resizeMode="contain" style={styles.blendModeImage} />
             </TouchableWithoutFeedback>
           );
         }}
