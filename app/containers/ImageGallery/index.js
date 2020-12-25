@@ -4,26 +4,38 @@
  *
  */
 
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Image, SafeAreaView, ScrollView, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 
 import images from 'images';
 import { styles } from './styles';
+import { selectImage } from '../ViewController/actions';
 
 const DEFAULT_GALLERY_COUNT = 6;
 
 export function ImageGallery(props) {
   const { gallery } = props;
 
+  const dispatch = useDispatch();
+
   useEffect(() => {
     if (gallery.length < 1) {
       props.navigation.navigate('Home');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [gallery]);
 
   const emptyImagesCount = DEFAULT_GALLERY_COUNT - gallery.length;
+
+  const handlerSelectImage = useCallback(
+    (imageUri) => {
+      console.log('[handlerSelectImage] image = ', imageUri);
+      dispatch(selectImage(imageUri));
+      props.navigation.navigate('GalleryImagePreview');
+    },
+    [dispatch, props.navigation],
+  );
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -31,10 +43,10 @@ export function ImageGallery(props) {
 
       <ScrollView contentContainerStyle={styles.scrollView}>
         {gallery.length > 0 &&
-          gallery.map((image, index) => {
+          gallery.map((imageUri, index) => {
             return (
-              <TouchableOpacity style={styles.imageContainer} key={index}>
-                <Image source={{ uri: image }} resizeMode="cover" style={styles.galleryImage} />
+              <TouchableOpacity style={styles.imageContainer} key={index} onPress={() => handlerSelectImage(imageUri)}>
+                <Image source={{ uri: imageUri }} resizeMode="cover" style={styles.galleryImage} />
               </TouchableOpacity>
             );
           })}
