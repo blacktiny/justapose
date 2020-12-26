@@ -16,6 +16,7 @@ const DEFAULT_GALLERY_COUNT = 6;
 
 export function ImageGallery(props) {
   const { gallery } = props;
+  console.log('gallery = ', gallery);
 
   const dispatch = useDispatch();
 

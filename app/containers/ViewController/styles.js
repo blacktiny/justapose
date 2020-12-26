@@ -134,7 +134,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    bottom: isSmallDevice ? 15 : 30,
+    bottom: isSmallDevice ? 15 : 60,
   },
 
   // Tip
@@ -228,7 +228,7 @@ export const styles = StyleSheet.create({
     backgroundColor: 'grey',
   },
 
-  // Modal
+  // Share Modal
   modalContentWrapper: {
     position: 'relative',
     width: deviceWitdh,

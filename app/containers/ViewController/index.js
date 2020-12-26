@@ -45,35 +45,27 @@ export function Header() {
 }
 
 export function ViewController(props) {
-  // Global
-  const [currentControlStep, setCurrentControlStep] = useState(CONTROL_STEP.ADDJUST);
-  const [previewControlStep, setPreviewControlStep] = useState(CONTROL_STEP.HOME);
-  const [originImage, setOriginImage] = useState({
+  const emptyImage = {
     rotate: 0,
     uri: '',
-  });
-  const [newImage, setNewImage] = useState({
-    rotate: 0,
-    uri: '',
-  });
-  const [mixedImage, setMixedImage] = useState({
-    rotate: 0,
-    uri: '',
-  });
-  const [mixedOriginImages, setMixedOriginImages] = useState([]);
-  const [controlTooltipInfo, setControlTooltipInfo] = useState({
+  };
+  const defaultControlTooltipInfo = {
     addAnother: false,
     saveit: false,
     tutShoot: false,
-  });
+  };
+
+  // Global
+  const [currentControlStep, setCurrentControlStep] = useState(CONTROL_STEP.ADDJUST);
+  const [previewControlStep, setPreviewControlStep] = useState(CONTROL_STEP.HOME);
+  const [originImage, setOriginImage] = useState({ ...emptyImage });
+  const [newImage, setNewImage] = useState({ ...emptyImage });
+  const [mixedImage, setMixedImage] = useState({ ...emptyImage });
+  const [mixedOriginImages, setMixedOriginImages] = useState([]);
+  const [controlTooltipInfo, setControlTooltipInfo] = useState({ ...defaultControlTooltipInfo });
   const [extractImageEnabled, setExtractImageEnabled] = useState(false);
-
-  // In Add New Just A Pose Image Step
-  const [takingPicture, setTakingPicture] = useState(false);
-
-  //
-  const [justOpacity, setJustOpacity] = useState(0.5);
-
+  const [takingPicture, setTakingPicture] = useState(false); // in taking a picture
+  const [justOpacity, setJustOpacity] = useState(0.5); //
   // Footer Control Buttons
   const [footerLeftBtnImg, setFooterLeftBtnImg] = useState(images.buttonCancel);
   const [footerControlBtn, setFooterControlBtn] = useState({
@@ -81,19 +73,15 @@ export function ViewController(props) {
     style: styles.cameraImage,
   });
   const [footerRightBtnImg, setFooterRightBtnImg] = useState(images.buttonUpload);
-
-  // Blend Mode
-  const [blendMode, setBlendMode] = useState(MIX_BLEND_MODES[0]); // default mode = Normal
-
-  // Share Modal
-  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [blendMode, setBlendMode] = useState(MIX_BLEND_MODES[0]); // Blend Mode, default mode = Normal
+  const [shareModalVisible, setShareModalVisible] = useState(false); // visibility for `Share Modal`
 
   let viewShotRef = createRef();
 
   const dispatch = useDispatch();
 
   useEffect(() => {
-    console.log(RNFS.DocumentDirectoryPath);
+    // check if gallery directory for justapose exists
     RNFS.readDir(galleryDirPath)
       .then((files) => {
         console.log('The folder "justapose" exist.');
@@ -115,8 +103,7 @@ export function ViewController(props) {
     switch (currentControlStep) {
       case CONTROL_STEP.ADDJUST:
         setControlTooltipInfo({
-          addAnother: false,
-          saveit: false,
+          ...defaultControlTooltipInfo,
           tutShoot: true,
         });
         setFooterControlBtn({
@@ -151,21 +138,14 @@ export function ViewController(props) {
         setFooterLeftBtnImg(images.buttonHome);
         break;
       case CONTROL_STEP.BLENDANDSAVE:
-        setControlTooltipInfo({
-          addAnother: false,
-          saveit: false,
-          tutShoot: false,
-        });
+        setControlTooltipInfo({ ...defaultControlTooltipInfo });
         setFooterControlBtn(null);
         setFooterRightBtnImg(images.buttonSave);
         setFooterLeftBtnImg(images.buttonBack);
+        setBlendMode(MIX_BLEND_MODES[0]);
         break;
       case CONTROL_STEP.DONE:
-        setControlTooltipInfo({
-          addAnother: false,
-          saveit: false,
-          tutShoot: false,
-        });
+        setControlTooltipInfo({ ...defaultControlTooltipInfo });
         setFooterControlBtn(null);
         setFooterRightBtnImg(images.buttonDone);
         setFooterLeftBtnImg(images.buttonBack);
@@ -246,10 +226,7 @@ export function ViewController(props) {
           setCurrentControlStep(CONTROL_STEP.PREVIEW);
         } else {
           setOriginImage({ ...newImage });
-          setNewImage({
-            rotate: 0,
-            uri: '',
-          });
+          setNewImage({ ...emptyImage });
           setCurrentControlStep(CONTROL_STEP.ADDJUST);
         }
         break;
@@ -265,7 +242,8 @@ export function ViewController(props) {
       default:
         break;
     }
-  }, [currentControlStep, originImage, newImage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentControlStep, originImage.uri, newImage]);
 
   // Event handler for left button in the footer
   const backToPrevStep = useCallback(() => {
@@ -274,10 +252,7 @@ export function ViewController(props) {
         if (previewControlStep === CONTROL_STEP.ROTATE) {
           setCurrentControlStep(previewControlStep);
           setNewImage({ ...originImage });
-          setOriginImage({
-            rotate: 0,
-            uri: '',
-          });
+          setOriginImage({ ...emptyImage });
         } else if (previewControlStep === CONTROL_STEP.PREVIEW) {
           setCurrentControlStep(previewControlStep);
           setOriginImage(mixedOriginImages[0]);
@@ -325,7 +300,6 @@ export function ViewController(props) {
   const handleControlBtnClicked = useCallback(() => {
     switch (currentControlStep) {
       case CONTROL_STEP.ADDJUST:
-        // takePicture();
         setTakingPicture(true);
         break;
       case CONTROL_STEP.ROTATE:
@@ -337,7 +311,6 @@ export function ViewController(props) {
       case CONTROL_STEP.PREVIEW:
         if (viewShotRef) {
           viewShotRef.capture().then((uri) => {
-            console.log('capture uri = ', uri);
             if (uri) {
               setMixedOriginImages([originImage, newImage]);
               initializeImages(uri);
@@ -347,7 +320,6 @@ export function ViewController(props) {
             }
           });
         }
-        // takeScreenShot();
         break;
       default:
         break;
@@ -584,7 +556,7 @@ export function ViewController(props) {
         {isShowBlendMode && <BlendModesList onBlendModeChanged={updateBlendMode} />}
       </View>
 
-      {/*   Modal   */}
+      {/*   Share Modal   */}
       <SharePreviewModal
         modalVisible={shareModalVisible}
         finalImage={mixedImage}
