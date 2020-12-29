@@ -66,6 +66,11 @@ export const styles = StyleSheet.create({
   },
   imagePreviewWrapper: {
     position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  imagePreviewCotainer: {
+    position: 'relative',
     width: deviceWitdh - 30,
     height: deviceWitdh - 30,
   },
@@ -76,7 +81,6 @@ export const styles = StyleSheet.create({
     marginTop: 30,
   },
   imagePreview: {
-    margin: 0,
     width: deviceWitdh - 30,
     height: deviceWitdh - 30,
   },
