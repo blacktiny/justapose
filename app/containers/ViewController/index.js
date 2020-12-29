@@ -13,8 +13,8 @@ import Slider from 'react-native-slider';
 import ViewShot from 'react-native-view-shot';
 import RNFS from 'react-native-fs';
 
-import CameraPreview from './CameraPreview';
 import BlendModesList, { MIX_BLEND_MODES } from './BlendModesList';
+import CameraPreview from './CameraPreview';
 import MixBlendImagePreview from './MixBlendImagePreview';
 import SharePreviewModal from './SharePreviewModal';
 import images from 'images';
@@ -47,6 +47,7 @@ export function Header() {
 export function ViewController(props) {
   const emptyImage = {
     rotate: 0,
+    transparency: 1,
     uri: '',
   };
   const defaultControlTooltipInfo = {
@@ -334,9 +335,10 @@ export function ViewController(props) {
 
   // Get a picture by camera
   const getPictureByCamera = useCallback((data) => {
-    setNewImage({ rotate: 0, uri: data.uri });
+    setNewImage({ ...emptyImage, uri: data.uri });
     setTakingPicture(false);
     setCurrentControlStep(CONTROL_STEP.ROTATE);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Event handler when the share modal is closed
@@ -351,6 +353,7 @@ export function ViewController(props) {
       }
       setShareModalVisible(false);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [props.navigation],
   );
 
@@ -375,7 +378,7 @@ export function ViewController(props) {
         console.log('User tapped custom button: ', res.customButton);
         // alert(res.customButton);
       } else {
-        setNewImage({ rotate: 0, uri: res.uri });
+        setNewImage({ ...newImage, uri: res.uri });
         setCurrentControlStep(CONTROL_STEP.ROTATE);
       }
     });
@@ -390,15 +393,15 @@ export function ViewController(props) {
 
   const initializeImages = (originUri = '', newUri = '') => {
     setOriginImage({
-      rotate: 0,
+      ...emptyImage,
       uri: originUri,
     });
     setNewImage({
-      rotate: 0,
+      ...emptyImage,
       uri: newUri,
     });
     setMixedImage({
-      rotate: 0,
+      ...emptyImage,
       uri: newUri,
     });
   };
@@ -462,7 +465,7 @@ export function ViewController(props) {
               style={{ marginTop: isShowCameraPreview ? 0 : 30 }}
               options={{ format: 'jpg', quality: 0.9 }}>
               {isShowNewImage && (
-                <View style={styles.imagePreviewWrapper}>
+                <View style={styles.imagePreviewCotainer}>
                   {newImage.uri !== '' && (
                     <Image
                       source={{ isStatic: true, uri: newImage.uri }}
@@ -481,7 +484,7 @@ export function ViewController(props) {
                   }}>
                   {/*   Image Preview   */}
                   {originImage.uri !== '' && (
-                    <View style={styles.imagePreviewWrapper}>
+                    <View style={styles.imagePreviewCotainer}>
                       <Image
                         source={{ isStatic: true, uri: originImage.uri }}
                         resizeMode="cover"

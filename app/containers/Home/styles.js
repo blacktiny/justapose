@@ -1,7 +1,9 @@
-import { StyleSheet, Dimensions, Platform } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 
 const deviceWitdh = Dimensions.get('window').width;
 const deviceHeight = Dimensions.get('window').height;
+
+const isSmallDevice = deviceHeight < 800;
 
 export const styles = StyleSheet.create({
   screen: {
@@ -20,7 +22,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
-    bottom: 30,
+    bottom: isSmallDevice ? 30 : 60,
   },
   cameraImage: {
     width: 200,
