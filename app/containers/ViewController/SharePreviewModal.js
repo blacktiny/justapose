@@ -4,8 +4,8 @@
  *
  */
 
-import React from 'react';
-import { Image, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import React, { useCallback } from 'react';
+import { Image, Share, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import Modal from 'react-native-modalbox';
 
 import { CONTROL_STEP, Header } from './index';
@@ -14,6 +14,23 @@ import { styles } from './styles';
 
 export function SharePreviewModal(props) {
   const { modalVisible, finalImage, onModalClosed } = props;
+
+  const onShare = useCallback(async () => {
+    try {
+      const result = await Share.share({
+        message: 'Share a picture',
+        url: finalImage.uri,
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log('activityType = ', result.activityType);
+        }
+      }
+    } catch (error) {
+      console.log('error = ', error);
+    }
+  }, [finalImage.uri]);
 
   return (
     <Modal
@@ -52,7 +69,7 @@ export function SharePreviewModal(props) {
               </TouchableWithoutFeedback>
             </View>
             <View style={styles.footerBtnWrapper}>
-              <TouchableOpacity onPress={() => {}}>
+              <TouchableOpacity onPress={() => onShare()}>
                 <Image source={images.buttonShare} resizeMode="contain" style={styles.buttonImage} />
               </TouchableOpacity>
             </View>
