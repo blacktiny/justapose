@@ -7,9 +7,12 @@
 import React, { createRef, useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, TouchableWithoutFeedback, View } from 'react-native';
 import { RNCamera } from 'react-native-camera';
+import { useDispatch } from 'react-redux';
 
+import ImagePreview from './ImagePreview';
 import images from 'images';
 import { styles } from './styles';
+import { updateControlImage } from './actions';
 
 const deviceWitdh = Dimensions.get('window').width;
 
@@ -31,13 +34,15 @@ const FLASH_IMAGES = {
 };
 
 export function CameraView(props) {
-  const { overlayImage = null, isTakingPicture = false, onSucceed } = props;
+  const { isTakingPicture = false, onSucceed } = props;
 
   const [flashType, setFlashType] = useState(FLASH_TYPE.AUTO);
   const [cameraType, setCameraType] = useState(CAMERA_TYPE.FRONT);
   const [takingPicture, setTakingPicture] = useState(false);
+  const [extractEnable, setExtractEnable] = useState(false); // get transparency overlay image
 
   let cameraEleRef = createRef();
+  const dispatch = useDispatch();
 
   const slide2LeftAnim = useRef(new Animated.Value(deviceWitdh + 50)).current;
   const slide2RightAnim = useRef(new Animated.Value(-(deviceWitdh + 150))).current;
@@ -71,6 +76,7 @@ export function CameraView(props) {
   const takePicture = async () => {
     if (cameraEleRef && !takingPicture) {
       setTakingPicture(true);
+
       Animated.timing(slide2RightAnim, {
         toValue: -(deviceWitdh / 2 - 50),
         duration: 500,
@@ -84,6 +90,8 @@ export function CameraView(props) {
 
       const options = { quality: 0.5, base64: true };
       const data = await cameraEleRef.takePictureAsync(options);
+      dispatch(updateControlImage({ image: { uri: data.uri, transparency: 1, rotate: 0 }, type: 'New' }));
+      setExtractEnable(true);
 
       setTimeout(() => {
         setTakingPicture(false);
@@ -99,6 +107,7 @@ export function CameraView(props) {
         }).start();
 
         setTimeout(() => {
+          setExtractEnable(false);
           onSucceed(data);
         }, 1000);
       }, 1000);
@@ -129,16 +138,12 @@ export function CameraView(props) {
           flashMode={RNCamera.Constants.FlashMode[flashType]}
         />
 
-        {overlayImage.uri !== '' && (
-          <View
-            style={{
-              ...styles.overlayImagePreview,
-              opacity: overlayImage.opacity,
-              transform: [{ rotate: `${overlayImage.rotate}deg` }],
-            }}>
-            <Image source={{ isStatic: true, uri: overlayImage.uri }} resizeMode="cover" style={styles.imagePreview} />
-          </View>
-        )}
+        <View
+          style={{
+            ...styles.overlayImagePreview,
+          }}>
+          <ImagePreview sourceType={'Origin'} transparentEnabled={true} extractImageEnabled={extractEnable} />
+        </View>
 
         {/*   Taking a Picture Animation   */}
         <View style={styles.takingPicture}>
