@@ -6,20 +6,20 @@
 
 import React, { createRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Dimensions, Image, View, TouchableWithoutFeedback, SafeAreaView } from 'react-native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { launchImageLibrary } from 'react-native-image-picker';
-import Slider from 'react-native-slider';
 import ViewShot from 'react-native-view-shot';
 import RNFS from 'react-native-fs';
 
 import BlendModesList, { MIX_BLEND_MODES } from './BlendModesList';
 import CameraPreview from './CameraPreview';
+import ImagePreview from './ImagePreview';
 import MixBlendImagePreview from './MixBlendImagePreview';
 import SharePreviewModal from './SharePreviewModal';
 import images from 'images';
 import { styles } from './styles';
-import { addNewImage } from './actions';
+import { addNewImage, updateControlImage } from './actions';
 
 const deviceWitdh = Dimensions.get('window').width;
 
@@ -59,14 +59,13 @@ export function ViewController(props) {
   // Global
   const [currentControlStep, setCurrentControlStep] = useState(CONTROL_STEP.ADDJUST);
   const [previewControlStep, setPreviewControlStep] = useState(CONTROL_STEP.HOME);
-  const [originImage, setOriginImage] = useState({ ...emptyImage });
-  const [newImage, setNewImage] = useState({ ...emptyImage });
   const [mixedImage, setMixedImage] = useState({ ...emptyImage });
   const [mixedOriginImages, setMixedOriginImages] = useState([]);
   const [controlTooltipInfo, setControlTooltipInfo] = useState({ ...defaultControlTooltipInfo });
-  const [extractImageEnabled, setExtractImageEnabled] = useState(false);
+  const [extractMixedImageEnabled, setExtractMixedImageEnabled] = useState(false);
+  const [extractNewImageEnabled, setExtractNewImageEnabled] = useState(false);
+  const [extractOriginImageEnabled, setExtractOriginImageEnabled] = useState(false);
   const [takingPicture, setTakingPicture] = useState(false); // in taking a picture
-  const [justOpacity, setJustOpacity] = useState(0.5); //
   // Footer Control Buttons
   const [footerLeftBtnImg, setFooterLeftBtnImg] = useState(images.buttonCancel);
   const [footerControlBtn, setFooterControlBtn] = useState({
@@ -80,6 +79,10 @@ export function ViewController(props) {
   let viewShotRef = createRef();
 
   const dispatch = useDispatch();
+
+  const isNew = useSelector((state) => state.controller.isNew); // If an user is first at this app, default is true
+  const newImage = useSelector((state) => state.controller.newImage); //
+  const originImage = useSelector((state) => state.controller.originImage); //
 
   useEffect(() => {
     // check if gallery directory for justapose exists
@@ -154,26 +157,21 @@ export function ViewController(props) {
       default:
         break;
     }
+    setExtractNewImageEnabled(false);
+    setExtractOriginImageEnabled(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentControlStep]);
 
   useEffect(() => {
-    if (extractImageEnabled && mixedImage.uri !== '') {
+    if (extractMixedImageEnabled && mixedImage.uri !== '') {
       saveMixedImage(mixedImage.uri);
-      setExtractImageEnabled(false);
+      setExtractMixedImageEnabled(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [extractImageEnabled, mixedImage]);
+  }, [extractMixedImageEnabled, mixedImage]);
 
-  const {
-    isShowCameraPreview,
-    isShowOriginImage,
-    isShowNewImage,
-    isShowOpacitySlider,
-    isShowBlendMode,
-  } = useMemo(() => {
+  const { isShowCameraPreview, isShowOriginImage, isShowNewImage, isShowBlendMode } = useMemo(() => {
     let showCameraPreview = false;
-    let showOpacitySlider = false;
     let showOriginImage = false;
     let showNewImage = false;
     let showBlendMode = false;
@@ -181,9 +179,6 @@ export function ViewController(props) {
     switch (currentControlStep) {
       case CONTROL_STEP.ADDJUST:
         showCameraPreview = true;
-        if (originImage.uri) {
-          showOpacitySlider = true;
-        }
         break;
       case CONTROL_STEP.ROTATE:
         showNewImage = true;
@@ -209,7 +204,6 @@ export function ViewController(props) {
       isShowCameraPreview: showCameraPreview,
       isShowOriginImage: showOriginImage,
       isShowNewImage: showNewImage,
-      isShowOpacitySlider: showOpacitySlider,
       isShowBlendMode: showBlendMode,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -224,10 +218,21 @@ export function ViewController(props) {
       case CONTROL_STEP.ROTATE:
         setPreviewControlStep(currentControlStep);
         if (originImage.uri) {
+          setExtractOriginImageEnabled(true);
           setCurrentControlStep(CONTROL_STEP.PREVIEW);
         } else {
-          setOriginImage({ ...newImage });
-          setNewImage({ ...emptyImage });
+          dispatch(
+            updateControlImage({
+              image: { ...newImage },
+              type: 'Origin',
+            }),
+          );
+          dispatch(
+            updateControlImage({
+              image: { ...emptyImage },
+              type: 'New',
+            }),
+          );
           setCurrentControlStep(CONTROL_STEP.ADDJUST);
         }
         break;
@@ -235,7 +240,7 @@ export function ViewController(props) {
         setCurrentControlStep(CONTROL_STEP.BLENDANDSAVE);
         break;
       case CONTROL_STEP.BLENDANDSAVE:
-        setExtractImageEnabled(true);
+        setExtractMixedImageEnabled(true);
         break;
       case CONTROL_STEP.DONE:
         setShareModalVisible(true);
@@ -252,18 +257,19 @@ export function ViewController(props) {
       case CONTROL_STEP.ADDJUST:
         if (previewControlStep === CONTROL_STEP.ROTATE) {
           setCurrentControlStep(previewControlStep);
-          setNewImage({ ...originImage });
-          setOriginImage({ ...emptyImage });
+          dispatch(updateControlImage({ image: { ...originImage }, type: 'New' }));
+          dispatch(updateControlImage({ image: { ...emptyImage }, type: 'Origin' }));
         } else if (previewControlStep === CONTROL_STEP.PREVIEW) {
           setCurrentControlStep(previewControlStep);
-          setOriginImage(mixedOriginImages[0]);
-          setNewImage(mixedOriginImages[1]);
+          dispatch(updateControlImage({ image: { ...mixedOriginImages[1] }, type: 'New' }));
+          dispatch(updateControlImage({ image: { ...mixedOriginImages[0] }, type: 'Origin' }));
           setMixedOriginImages([]);
         } else {
           props.navigation.navigate('ImageGallery');
         }
         break;
       case CONTROL_STEP.ROTATE:
+        dispatch(updateControlImage({ image: { ...emptyImage }, type: 'New' }));
         setCurrentControlStep(CONTROL_STEP.ADDJUST);
         break;
       case CONTROL_STEP.PREVIEW:
@@ -304,16 +310,13 @@ export function ViewController(props) {
         setTakingPicture(true);
         break;
       case CONTROL_STEP.ROTATE:
-        setNewImage({
-          ...newImage,
-          rotate: (newImage.rotate + 90) % 360,
-        });
+        dispatch(updateControlImage({ image: { ...newImage, rotate: (newImage.rotate + 90) % 360 }, type: 'New' }));
         break;
       case CONTROL_STEP.PREVIEW:
         if (viewShotRef) {
           viewShotRef.capture().then((uri) => {
             if (uri) {
-              setMixedOriginImages([originImage, newImage]);
+              setMixedOriginImages([{ ...originImage }, { ...newImage }]);
               initializeImages(uri);
 
               setPreviewControlStep(currentControlStep);
@@ -334,17 +337,16 @@ export function ViewController(props) {
   }, []);
 
   // Get a picture by camera
-  const getPictureByCamera = useCallback((data) => {
-    setNewImage({ ...emptyImage, uri: data.uri });
+  const getPictureByCamera = useCallback(() => {
     setTakingPicture(false);
     setCurrentControlStep(CONTROL_STEP.ROTATE);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Event handler when the share modal is closed
   const closeShareModal = useCallback(
     (nextStep = '') => {
       if (nextStep === CONTROL_STEP.HOME) {
+        initializeImages();
         props.navigation.navigate('ImageGallery');
       } else if (nextStep === CONTROL_STEP.ADDJUST) {
         initializeImages();
@@ -376,9 +378,9 @@ export function ViewController(props) {
         console.log('ImagePicker Error: ', res.error);
       } else if (res.customButton) {
         console.log('User tapped custom button: ', res.customButton);
-        // alert(res.customButton);
       } else {
-        setNewImage({ ...newImage, uri: res.uri });
+        dispatch(updateControlImage({ image: { ...newImage, uri: res.uri }, type: 'New' }));
+        setExtractOriginImageEnabled(true);
         setCurrentControlStep(CONTROL_STEP.ROTATE);
       }
     });
@@ -392,14 +394,8 @@ export function ViewController(props) {
   };
 
   const initializeImages = (originUri = '', newUri = '') => {
-    setOriginImage({
-      ...emptyImage,
-      uri: originUri,
-    });
-    setNewImage({
-      ...emptyImage,
-      uri: newUri,
-    });
+    dispatch(updateControlImage({ image: { ...emptyImage, uri: originUri }, type: 'Origin' }));
+    dispatch(updateControlImage({ image: { ...emptyImage, uri: newUri }, type: 'New' }));
     setMixedImage({
       ...emptyImage,
       uri: newUri,
@@ -428,16 +424,6 @@ export function ViewController(props) {
     }
   };
 
-  const sliderOptions = {
-    minimumTrackTintColor: 'lightgrey',
-    maximumTrackTintColor: 'darkgrey',
-    style: {
-      width: deviceWitdh - 90,
-      backgroundColor: 'linear-gradient(#f0f0f0, #0f0f0f)',
-      marginHorizontal: 10,
-    },
-  };
-
   return (
     <SafeAreaView style={styles.screen}>
       {/*   Header   */}
@@ -448,13 +434,7 @@ export function ViewController(props) {
         {!isShowBlendMode && (
           <React.Fragment>
             {/*   Camera Preview   */}
-            {isShowCameraPreview && (
-              <CameraPreview
-                isTakingPicture={takingPicture}
-                overlayImage={{ ...originImage, opacity: justOpacity }}
-                onSucceed={getPictureByCamera}
-              />
-            )}
+            {isShowCameraPreview && <CameraPreview isTakingPicture={takingPicture} onSucceed={getPictureByCamera} />}
 
             <ViewShot
               ref={(ref) => {
@@ -465,33 +445,24 @@ export function ViewController(props) {
               style={{ marginTop: isShowCameraPreview ? 0 : 30 }}
               options={{ format: 'jpg', quality: 0.9 }}>
               {isShowNewImage && (
-                <View style={styles.imagePreviewCotainer}>
-                  {newImage.uri !== '' && (
-                    <Image
-                      source={{ isStatic: true, uri: newImage.uri }}
-                      resizeMode="cover"
-                      style={{ ...styles.imagePreview, transform: [{ rotate: `${newImage.rotate}deg` }] }}
-                    />
-                  )}
-                </View>
+                <ImagePreview
+                  sourceType={'New'}
+                  transparentEnabled={originImage.uri !== '' && !isShowOriginImage}
+                  extractImageEnabled={extractNewImageEnabled}
+                />
               )}
 
               {isShowOriginImage && (
                 <View
                   style={{
                     marginTop: isShowCameraPreview || isShowNewImage ? -(deviceWitdh - 30) : 0,
-                    opacity: originImage.uri !== '' ? justOpacity : 1,
                   }}>
                   {/*   Image Preview   */}
-                  {originImage.uri !== '' && (
-                    <View style={styles.imagePreviewCotainer}>
-                      <Image
-                        source={{ isStatic: true, uri: originImage.uri }}
-                        resizeMode="cover"
-                        style={{ ...styles.imagePreview, transform: [{ rotate: `${originImage.rotate}deg` }] }}
-                      />
-                    </View>
-                  )}
+                  <ImagePreview
+                    sourceType={'Origin'}
+                    transparentEnabled={currentControlStep < CONTROL_STEP.PREVIEW}
+                    extractImageEnabled={extractOriginImageEnabled}
+                  />
                 </View>
               )}
             </ViewShot>
@@ -501,10 +472,10 @@ export function ViewController(props) {
         {isShowBlendMode && (
           <View style={styles.imageBlendPreviewWrapper}>
             <MixBlendImagePreview
-              originImage={{ ...originImage, opacity: justOpacity }}
+              originImage={originImage}
               newImage={newImage}
               blendMode={blendMode}
-              extractImageEnabled={extractImageEnabled}
+              extractImageEnabled={extractMixedImageEnabled}
               onExtractImage={(uri) => {
                 setMixedImage({ rotate: 0, uri: uri });
               }}
@@ -513,26 +484,21 @@ export function ViewController(props) {
         )}
       </View>
 
-      {isShowOpacitySlider && (
-        <View style={styles.opacitySliderWrapper}>
-          <Image source={images.adjustTrans} resizeMode="contain" style={styles.adjustTransTip} />
-          <View style={styles.opacitySliderContainer}>
-            <Image source={images.transparent} resizeMode="contain" style={styles.transparencySliderImage} />
-            <Slider value={justOpacity} onValueChange={(value) => setJustOpacity(value)} {...sliderOptions} />
-            <Image source={images.opaque} resizeMode="contain" style={styles.transparencySliderImage} />
-          </View>
-        </View>
-      )}
-
       {/*   Footer   */}
       <View style={styles.footer}>
         {/*   Control Tip Images   */}
-        {controlTooltipInfo.addAnother && (
-          <Image source={images.addAnother} resizeMode="contain" style={styles.addAnotherTip} />
-        )}
-        {controlTooltipInfo.saveit && <Image source={images.saveit} resizeMode="contain" style={styles.saveitTip} />}
-        {controlTooltipInfo.tutShoot && (
-          <Image source={images.tutShoot} resizeMode="contain" style={styles.tutShootTip} />
+        {isNew && (
+          <React.Fragment>
+            {controlTooltipInfo.addAnother && (
+              <Image source={images.addAnother} resizeMode="contain" style={styles.addAnotherTip} />
+            )}
+            {controlTooltipInfo.saveit && (
+              <Image source={images.saveit} resizeMode="contain" style={styles.saveitTip} />
+            )}
+            {controlTooltipInfo.tutShoot && (
+              <Image source={images.tutShoot} resizeMode="contain" style={styles.tutShootTip} />
+            )}
+          </React.Fragment>
         )}
 
         {/*   Control Buttons   */}
