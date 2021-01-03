@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Image, View } from 'react-native';
+import { Image } from 'react-native';
 import {
   ColorBlend,
   ColorBurnBlend,
@@ -24,12 +24,16 @@ import {
   ScreenBlend,
   SoftLightBlend,
 } from 'react-native-image-filter-kit';
+import { useSelector } from 'react-redux';
 
 import { BLEND_MODE_TYPES } from './BlendModesList';
 import { styles } from './styles';
 
 export function MixBlendImagePreview(props) {
-  const { originImage, newImage, blendMode = 'none', extractImageEnabled, onExtractImage } = props;
+  const { blendMode = 'none', extractImageEnabled, onExtractImage } = props;
+
+  const newImage = useSelector((state) => state.controller.newImage); //
+  const originImage = useSelector((state) => state.controller.originImage); //
 
   const getOptions = () => {
     return {

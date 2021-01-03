@@ -110,8 +110,6 @@ export const styles = StyleSheet.create({
   // Opacity Slider
   opacitySliderWrapper: {
     width: deviceWitdh - 30,
-    marginLeft: 15,
-    marginRight: 15,
   },
   adjustTransTip: {
     width: deviceWitdh,

@@ -4,7 +4,7 @@
  *
  */
 
-import { ADD_NEW_IMAGE, DELETE_IMAGE, SELECT_IMAGE } from './constants';
+import { ADD_NEW_IMAGE, DELETE_IMAGE, SELECT_IMAGE, UPDATE_CONTROL_IMAGE } from './constants';
 
 export function addNewImage(imageUri) {
   return {
@@ -24,5 +24,12 @@ export function selectImage(imageUri) {
   return {
     type: SELECT_IMAGE,
     uri: imageUri,
+  };
+}
+
+export function updateControlImage(data) {
+  return {
+    type: UPDATE_CONTROL_IMAGE,
+    data,
   };
 }
