@@ -245,9 +245,6 @@ PODS:
     - React-Core
   - react-native-camera/RN (3.40.0):
     - React-Core
-  - react-native-image-editor (2.3.0):
-    - React
-    - React-RCTImage
   - react-native-image-filter-kit (0.7.3):
     - Bolts/Tasks (= 1.9.0)
     - React
@@ -373,7 +370,6 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - react-native-camera (from `../node_modules/react-native-camera`)
-  - "react-native-image-editor (from `../node_modules/@react-native-community/image-editor`)"
   - react-native-image-filter-kit (from `../node_modules/react-native-image-filter-kit`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
@@ -446,8 +442,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   react-native-camera:
     :path: "../node_modules/react-native-camera"
-  react-native-image-editor:
-    :path: "../node_modules/@react-native-community/image-editor"
   react-native-image-filter-kit:
     :path: "../node_modules/react-native-image-filter-kit"
   react-native-image-picker:
@@ -522,7 +516,6 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 8ca588cc921e70590820ce72b8789b02c67cce38
   React-jsinspector: b14e62ebe7a66e9231e9581279909f2fc3db6606
   react-native-camera: 5c1fbfecf63b802b8ca4a71c60d30a71550fb348
-  react-native-image-editor: bd67912f38a8e7a895bf6eb8f445acdcefd8fd0c
   react-native-image-filter-kit: 2047cc603ee1b0e506a7b569ce174a7de6a5db15
   react-native-image-picker: 510ea4e35cbe99ec92ecd89e9449e7e149c930e6
   react-native-safe-area-context: 0ed9288ed4409beabb0817b54efc047286fc84da

@@ -4,36 +4,86 @@
  *
  */
 
-import React, { useCallback, useEffect } from 'react';
+import React, { createRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Image, View } from 'react-native';
 import Slider from 'react-native-slider';
+import ImageZoom from 'react-native-image-pan-zoom';
+import ViewShot from 'react-native-view-shot';
+import { useDispatch, useSelector } from 'react-redux';
 
 import images from 'images';
 import { styles } from './styles';
+import { updateControlImage } from './actions';
 
 const deviceWitdh = Dimensions.get('window').width;
 
 export function ImagePreview(props) {
-  const { source, onUpdatedImage, transparentEnabled = false } = props;
+  // props
+  const { sourceType, extractImageEnabled = false, transparentEnabled = false, zoomEnabled = false } = props;
+
+  // state
+  const [transparency, setTransparency] = useState(0.5);
+
+  // redux state
+  const newImage = useSelector((state) => state.controller.newImage);
+  const originImage = useSelector((state) => state.controller.originImage);
+
+  let viewShotRef = createRef();
+  const dispatch = useDispatch();
+
+  const sourceImage = useMemo(() => {
+    if (sourceType === 'New') {
+      return newImage;
+    }
+
+    if (sourceType === 'Origin') {
+      return originImage;
+    }
+  }, [newImage, originImage, sourceType]);
 
   useEffect(() => {
-    if (transparentEnabled) {
-      onUpdatedImage({ ...source, transparency: 0.5 });
+    if (!transparentEnabled) {
+      setTransparency(sourceImage.transparency);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [transparentEnabled]);
 
-  const imageTransparencyChange = useCallback(
-    (value) => {
-      if (onUpdatedImage) {
-        onUpdatedImage({
-          ...source,
-          transparency: value,
+  useEffect(() => {
+    if (extractImageEnabled) {
+      if (zoomEnabled) {
+        viewShotRef.capture().then((uri) => {
+          if (uri) {
+            dispatch(
+              updateControlImage({
+                image: {
+                  ...sourceImage,
+                  originUri: sourceImage.uri,
+                  uri: uri,
+                  transparency: transparency,
+                },
+                type: sourceType,
+              }),
+            );
+          }
         });
+      } else {
+        dispatch(
+          updateControlImage({
+            image: {
+              ...sourceImage,
+              transparency: transparency,
+            },
+            type: sourceType,
+          }),
+        );
       }
-    },
-    [onUpdatedImage, source],
-  );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extractImageEnabled]);
+
+  const imageTransparencyChange = useCallback((value) => {
+    setTransparency(value);
+  }, []);
 
   const sliderOptions = {
     minimumTrackTintColor: 'lightgrey',
@@ -45,21 +95,46 @@ export function ImagePreview(props) {
     },
   };
 
-  if (!source.uri) {
+  if (!sourceImage.uri) {
     return <View />;
   }
 
   return (
     <View style={styles.imagePreviewWrapper}>
       <View style={styles.imagePreviewCotainer}>
-        {source.uri !== '' && (
+        {zoomEnabled ? (
+          <ViewShot
+            ref={(ref) => {
+              if (ref) {
+                viewShotRef = ref;
+              }
+            }}
+            style={styles.imagePreviewCotainer}
+            options={{ format: 'jpg', quality: 0.9 }}>
+            <ImageZoom
+              cropWidth={deviceWitdh - 30}
+              cropHeight={deviceWitdh - 30}
+              imageWidth={deviceWitdh - 30}
+              imageHeight={deviceWitdh - 30}>
+              <Image
+                source={{ isStatic: true, uri: sourceImage.uri }}
+                resizeMode="cover"
+                style={{
+                  ...styles.imagePreview,
+                  transform: [{ rotate: `${sourceImage.rotate}deg` }],
+                  opacity: transparency,
+                }}
+              />
+            </ImageZoom>
+          </ViewShot>
+        ) : (
           <Image
-            source={{ isStatic: true, uri: source.uri }}
+            source={{ isStatic: true, uri: sourceImage.uri }}
             resizeMode="cover"
             style={{
               ...styles.imagePreview,
-              transform: [{ rotate: `${source.rotate}deg` }],
-              opacity: source.transparency,
+              transform: [{ rotate: `${sourceImage.rotate}deg` }],
+              opacity: transparency,
             }}
           />
         )}
@@ -72,11 +147,7 @@ export function ImagePreview(props) {
 
           <View style={styles.opacitySliderContainer}>
             <Image source={images.transparent} resizeMode="contain" style={styles.transparencySliderImage} />
-            <Slider
-              value={source.transparency}
-              onValueChange={(value) => imageTransparencyChange(value)}
-              {...sliderOptions}
-            />
+            <Slider value={transparency} onValueChange={(value) => imageTransparencyChange(value)} {...sliderOptions} />
             <Image source={images.opaque} resizeMode="contain" style={styles.transparencySliderImage} />
           </View>
         </View>
