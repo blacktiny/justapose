@@ -31,6 +31,7 @@ export function ImagePreview(props) {
   const [transparency, setTransparency] = useState(0.5);
 
   // redux state
+  const isNew = useSelector((state) => state.controller.isNew);
   const newImage = useSelector((state) => state.controller.newImage);
   const originImage = useSelector((state) => state.controller.originImage);
 
@@ -157,7 +158,7 @@ export function ImagePreview(props) {
       {/*   slider for transparency   */}
       {transparentEnabled && (
         <View style={styles.opacitySliderWrapper}>
-          <Image source={images.adjustTrans} resizeMode="contain" style={styles.adjustTransTip} />
+          {isNew && <Image source={images.adjustTrans} resizeMode="contain" style={styles.adjustTransTip} />}
 
           <View style={styles.opacitySliderContainer}>
             <Image source={images.transparent} resizeMode="contain" style={styles.transparencySliderImage} />

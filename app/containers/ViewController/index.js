@@ -5,7 +5,8 @@
  */
 
 import React, { createRef, useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Dimensions, Image, View, TouchableWithoutFeedback, SafeAreaView } from 'react-native';
+import { Alert, Dimensions, Image, View, TouchableWithoutFeedback, SafeAreaView, Text } from 'react-native';
+import CheckBox from '@react-native-community/checkbox';
 import { useDispatch, useSelector } from 'react-redux';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -68,6 +69,7 @@ export function ViewController(props) {
   const [extractOriginImageEnabled, setExtractOriginImageEnabled] = useState(false);
   const [extractOriginImageFinished, setExtractOriginImageFinished] = useState(false);
   const [takingPicture, setTakingPicture] = useState(false); // in taking a picture
+  const [newImageEditable, setNewImageEditable] = useState(false); //
   // Footer Control Buttons
   const [footerLeftBtnImg, setFooterLeftBtnImg] = useState(images.buttonCancel);
   const [footerControlBtn, setFooterControlBtn] = useState({
@@ -208,7 +210,7 @@ export function ViewController(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extractNewImageEnabled, extractNewImageFinished, extractOriginImageEnabled, extractOriginImageFinished]);
 
-  const { isShowCameraPreview, isShowOriginImage, isShowNewImage, isShowBlendMode } = useMemo(() => {
+  const { isShowCameraPreview, isShowOriginImage, isShowNewImage, isShowBlendMode, isShowCheckbox } = useMemo(() => {
     let showCameraPreview = false;
     let showOriginImage = false;
     let showNewImage = false;
@@ -243,6 +245,7 @@ export function ViewController(props) {
       isShowOriginImage: showOriginImage,
       isShowNewImage: showNewImage,
       isShowBlendMode: showBlendMode,
+      isShowCheckbox: showNewImage && showOriginImage && currentControlStep === CONTROL_STEP.ROTATE,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentControlStep]);
@@ -463,14 +466,31 @@ export function ViewController(props) {
             {/*   Camera Preview   */}
             {isShowCameraPreview && <CameraPreview isTakingPicture={takingPicture} onSucceed={getPictureByCamera} />}
 
+            {/*   Checkbox   */}
+            {isShowCheckbox && (
+              <View style={styles.checkboxWrapper}>
+                <CheckBox
+                  boxType={'square'}
+                  disabled={false}
+                  lineWidth={1}
+                  value={newImageEditable}
+                  onValueChange={(newValue) => setNewImageEditable(newValue)}
+                  style={styles.checkbox}
+                />
+                <Text>{'Edit a bottom image'}</Text>
+              </View>
+            )}
+
+            {/*   Image Preview   */}
             <ViewShot
               ref={(ref) => {
                 if (ref) {
                   viewShotRef = ref;
                 }
               }}
-              style={{ marginTop: isShowCameraPreview ? 0 : 30 }}
+              style={{ marginTop: isShowCameraPreview ? 0 : isShowCheckbox ? 10 : 30 }}
               options={{ format: 'jpg', quality: 0.9 }}>
+              {/*   Bottom Image Preview   */}
               {isShowNewImage && (
                 <ImagePreview
                   sourceType={'New'}
@@ -481,12 +501,12 @@ export function ViewController(props) {
                 />
               )}
 
-              {isShowOriginImage && (
+              {!newImageEditable && isShowOriginImage && (
                 <View
                   style={{
                     marginTop: isShowCameraPreview || isShowNewImage ? -(deviceWitdh - 30) : 0,
                   }}>
-                  {/*   Image Preview   */}
+                  {/*   Top Image Preview   */}
                   <ImagePreview
                     sourceType={'Origin'}
                     transparentEnabled={currentControlStep < CONTROL_STEP.PREVIEW}

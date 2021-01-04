@@ -53,6 +53,10 @@ export function MixBlendImagePreview(props) {
   };
 
   const renderOriginImage = () => {
+    if (!originImage.uri) {
+      return <React.Fragment />;
+    }
+
     return (
       <Image
         source={{ isStatic: true, uri: originImage.uri }}
@@ -66,6 +70,10 @@ export function MixBlendImagePreview(props) {
   };
 
   const renderNewImage = (position = 'relative') => {
+    if (!originImage.uri) {
+      return <React.Fragment />;
+    }
+
     return (
       <Image
         source={{ isStatic: true, uri: newImage.uri }}

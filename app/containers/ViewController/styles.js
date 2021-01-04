@@ -84,6 +84,17 @@ export const styles = StyleSheet.create({
     width: deviceWitdh - 30,
     height: deviceWitdh - 30,
   },
+  checkboxWrapper: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+  },
 
   // Taking Picture Animation
   takingPicture: {
