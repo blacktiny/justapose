@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createReducer from './reducers';
 
 const persistConfig = {
-  key: 'justapose',
+  key: 'just-a-pose',
   storage: AsyncStorage,
 };
 

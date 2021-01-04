@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Image } from 'react-native';
+import { Image, View } from 'react-native';
 import {
   ColorBlend,
   ColorBurnBlend,
@@ -53,7 +53,7 @@ export function MixBlendImagePreview(props) {
 
   const renderOriginImage = () => {
     if (!originImage.uri) {
-      return <React.Fragment />;
+      return <View />;
     }
 
     return (
@@ -70,7 +70,7 @@ export function MixBlendImagePreview(props) {
 
   const renderNewImage = (position = 'relative') => {
     if (!originImage.uri) {
-      return <React.Fragment />;
+      return <View />;
     }
 
     return (

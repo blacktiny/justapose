@@ -13,7 +13,7 @@ import images from 'images';
 import { styles } from './styles';
 
 export function SharePreviewModal(props) {
-  const { modalVisible, finalImage, onModalClosed } = props;
+  const { isNew, modalVisible, finalImage, onModalClosed } = props;
 
   const onShare = useCallback(async () => {
     try {
@@ -54,7 +54,7 @@ export function SharePreviewModal(props) {
 
         {/*   Footer   */}
         <View style={{ ...styles.footer, ...styles.modalFooter }}>
-          <Image source={images.shareIt} resizeMode="contain" style={styles.shareItTip} />
+          {isNew && <Image source={images.shareIt} resizeMode="contain" style={styles.shareItTip} />}
 
           {/*   Control Buttons   */}
           <View style={styles.btnsGroupWrapper}>

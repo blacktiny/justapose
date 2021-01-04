@@ -176,36 +176,40 @@ export function ViewController(props) {
   }, [extractMixedImageEnabled, mixedImage]);
 
   useEffect(() => {
-    if (
-      ((extractNewImageEnabled && extractNewImageFinished) || (!extractNewImageEnabled && !extractNewImageFinished)) &&
-      ((extractOriginImageEnabled && extractOriginImageFinished) ||
-        (!extractOriginImageEnabled && !extractOriginImageFinished))
-    ) {
-      switch (currentControlStep) {
-        case CONTROL_STEP.ADDJUST:
-          break;
-        case CONTROL_STEP.ROTATE:
-          if (!originImage.uri) {
-            dispatch(
-              updateControlImage({
-                image: { ...newImage },
-                type: 'Origin',
-              }),
-            );
-            dispatch(
-              updateControlImage({
-                image: { ...emptyImage },
-                type: 'New',
-              }),
-            );
-            setCurrentControlStep(CONTROL_STEP.ADDJUST);
-          }
-          break;
+    if (extractNewImageEnabled || extractOriginImageEnabled) {
+      if (
+        ((extractNewImageEnabled && extractNewImageFinished) || (!extractNewImageEnabled && !extractNewImageFinished)) &&
+        ((extractOriginImageEnabled && extractOriginImageFinished) ||
+          (!extractOriginImageEnabled && !extractOriginImageFinished))
+      ) {
+        switch (currentControlStep) {
+          case CONTROL_STEP.ADDJUST:
+            break;
+          case CONTROL_STEP.ROTATE:
+            if (!originImage.uri) {
+              dispatch(
+                updateControlImage({
+                  image: { ...newImage },
+                  type: 'Origin',
+                }),
+              );
+              dispatch(
+                updateControlImage({
+                  image: { ...emptyImage },
+                  type: 'New',
+                }),
+              );
+              setCurrentControlStep(CONTROL_STEP.ADDJUST);
+            } else {
+              setCurrentControlStep(CONTROL_STEP.PREVIEW);
+            }
+            break;
+        }
+        setExtractNewImageEnabled(false);
+        setExtractNewImageFinished(false);
+        setExtractOriginImageEnabled(false);
+        setExtractOriginImageFinished(false);
       }
-      setExtractNewImageEnabled(false);
-      setExtractNewImageFinished(false);
-      setExtractOriginImageEnabled(false);
-      setExtractOriginImageFinished(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extractNewImageEnabled, extractNewImageFinished, extractOriginImageEnabled, extractOriginImageFinished]);
@@ -261,7 +265,6 @@ export function ViewController(props) {
         setExtractNewImageEnabled(true);
         if (originImage.uri) {
           setExtractOriginImageEnabled(true);
-          setCurrentControlStep(CONTROL_STEP.PREVIEW);
         }
         break;
       case CONTROL_STEP.PREVIEW:
@@ -406,9 +409,6 @@ export function ViewController(props) {
         console.log('User tapped custom button: ', res.customButton);
       } else {
         dispatch(updateControlImage({ image: { ...newImage, uri: res.uri }, type: 'New' }));
-        if (originImage.uri) {
-          setExtractOriginImageEnabled(true);
-        }
         setCurrentControlStep(CONTROL_STEP.ROTATE);
       }
     });
@@ -493,15 +493,16 @@ export function ViewController(props) {
                 <ImagePreview
                   sourceType={'New'}
                   transparentEnabled={originImage.uri !== '' && !isShowOriginImage}
-                  zoomEnabled={true}
+                  zoomEnabled={currentControlStep < CONTROL_STEP.PREVIEW}
                   extractImageEnabled={extractNewImageEnabled}
                   extractFinished={() => setExtractNewImageFinished(true)}
                 />
               )}
 
-              {!newImageEditable && isShowOriginImage && (
+              {isShowOriginImage && (
                 <View
                   style={{
+                    display: newImageEditable ? 'none' : 'flex',
                     marginTop: isShowCameraPreview || isShowNewImage ? -(deviceWitdh - 30) : 0,
                   }}>
                   {/*   Top Image Preview   */}
@@ -575,6 +576,7 @@ export function ViewController(props) {
 
       {/*   Share Modal   */}
       <SharePreviewModal
+        isNew={isNew}
         modalVisible={shareModalVisible}
         finalImage={mixedImage}
         onModalClosed={(nextStep) => closeShareModal(nextStep)}
