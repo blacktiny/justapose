@@ -69,7 +69,7 @@ export const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'column',
   },
-  imagePreviewCotainer: {
+  imagePreviewContainer: {
     position: 'relative',
     width: deviceWitdh - 30,
     height: deviceWitdh - 30,

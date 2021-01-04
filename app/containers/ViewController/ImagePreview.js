@@ -19,7 +19,13 @@ const deviceWitdh = Dimensions.get('window').width;
 
 export function ImagePreview(props) {
   // props
-  const { sourceType, extractImageEnabled = false, transparentEnabled = false, zoomEnabled = false } = props;
+  const {
+    sourceType,
+    extractImageEnabled = false,
+    transparentEnabled = false,
+    zoomEnabled = false,
+    extractFinished,
+  } = props;
 
   // state
   const [transparency, setTransparency] = useState(0.5);
@@ -51,21 +57,26 @@ export function ImagePreview(props) {
   useEffect(() => {
     if (extractImageEnabled) {
       if (zoomEnabled) {
-        viewShotRef.capture().then((uri) => {
-          if (uri) {
-            dispatch(
-              updateControlImage({
-                image: {
-                  ...sourceImage,
-                  originUri: sourceImage.uri,
-                  uri: uri,
-                  transparency: transparency,
-                },
-                type: sourceType,
-              }),
-            );
-          }
-        });
+        if (viewShotRef) {
+          viewShotRef.capture().then((uri) => {
+            if (uri) {
+              dispatch(
+                updateControlImage({
+                  image: {
+                    originUri: sourceImage.uri,
+                    uri: uri,
+                    rotate: 0,
+                    transparency: transparency,
+                  },
+                  type: sourceType,
+                }),
+              );
+              if (extractFinished) {
+                extractFinished();
+              }
+            }
+          });
+        }
       } else {
         dispatch(
           updateControlImage({
@@ -76,6 +87,9 @@ export function ImagePreview(props) {
             type: sourceType,
           }),
         );
+        if (extractFinished) {
+          extractFinished();
+        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,7 +104,7 @@ export function ImagePreview(props) {
     maximumTrackTintColor: 'darkgrey',
     style: {
       width: deviceWitdh - 90,
-      backgroundColor: 'linear-gradient(#f0f0f0, #0f0f0f)',
+      backgroundColor: '#f0f0f0',
       marginHorizontal: 10,
     },
   };

@@ -64,7 +64,9 @@ export function ViewController(props) {
   const [controlTooltipInfo, setControlTooltipInfo] = useState({ ...defaultControlTooltipInfo });
   const [extractMixedImageEnabled, setExtractMixedImageEnabled] = useState(false);
   const [extractNewImageEnabled, setExtractNewImageEnabled] = useState(false);
+  const [extractNewImageFinished, setExtractNewImageFinished] = useState(false);
   const [extractOriginImageEnabled, setExtractOriginImageEnabled] = useState(false);
+  const [extractOriginImageFinished, setExtractOriginImageFinished] = useState(false);
   const [takingPicture, setTakingPicture] = useState(false); // in taking a picture
   // Footer Control Buttons
   const [footerLeftBtnImg, setFooterLeftBtnImg] = useState(images.buttonCancel);
@@ -101,6 +103,9 @@ export function ViewController(props) {
             console.log('err = ', error);
           });
       });
+
+    initializeImages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -157,8 +162,6 @@ export function ViewController(props) {
       default:
         break;
     }
-    setExtractNewImageEnabled(false);
-    setExtractOriginImageEnabled(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentControlStep]);
 
@@ -169,6 +172,41 @@ export function ViewController(props) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extractMixedImageEnabled, mixedImage]);
+
+  useEffect(() => {
+    if (
+      ((extractNewImageEnabled && extractNewImageFinished) || (!extractNewImageEnabled && !extractNewImageFinished)) &&
+      ((extractOriginImageEnabled && extractOriginImageFinished) ||
+        (!extractOriginImageEnabled && !extractOriginImageFinished))
+    ) {
+      switch (currentControlStep) {
+        case CONTROL_STEP.ADDJUST:
+          break;
+        case CONTROL_STEP.ROTATE:
+          if (!originImage.uri) {
+            dispatch(
+              updateControlImage({
+                image: { ...newImage },
+                type: 'Origin',
+              }),
+            );
+            dispatch(
+              updateControlImage({
+                image: { ...emptyImage },
+                type: 'New',
+              }),
+            );
+            setCurrentControlStep(CONTROL_STEP.ADDJUST);
+          }
+          break;
+      }
+      setExtractNewImageEnabled(false);
+      setExtractNewImageFinished(false);
+      setExtractOriginImageEnabled(false);
+      setExtractOriginImageFinished(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extractNewImageEnabled, extractNewImageFinished, extractOriginImageEnabled, extractOriginImageFinished]);
 
   const { isShowCameraPreview, isShowOriginImage, isShowNewImage, isShowBlendMode } = useMemo(() => {
     let showCameraPreview = false;
@@ -217,23 +255,10 @@ export function ViewController(props) {
         break;
       case CONTROL_STEP.ROTATE:
         setPreviewControlStep(currentControlStep);
+        setExtractNewImageEnabled(true);
         if (originImage.uri) {
           setExtractOriginImageEnabled(true);
           setCurrentControlStep(CONTROL_STEP.PREVIEW);
-        } else {
-          dispatch(
-            updateControlImage({
-              image: { ...newImage },
-              type: 'Origin',
-            }),
-          );
-          dispatch(
-            updateControlImage({
-              image: { ...emptyImage },
-              type: 'New',
-            }),
-          );
-          setCurrentControlStep(CONTROL_STEP.ADDJUST);
         }
         break;
       case CONTROL_STEP.PREVIEW:
@@ -380,7 +405,9 @@ export function ViewController(props) {
         console.log('User tapped custom button: ', res.customButton);
       } else {
         dispatch(updateControlImage({ image: { ...newImage, uri: res.uri }, type: 'New' }));
-        setExtractOriginImageEnabled(true);
+        if (originImage.uri) {
+          setExtractOriginImageEnabled(true);
+        }
         setCurrentControlStep(CONTROL_STEP.ROTATE);
       }
     });
@@ -448,7 +475,9 @@ export function ViewController(props) {
                 <ImagePreview
                   sourceType={'New'}
                   transparentEnabled={originImage.uri !== '' && !isShowOriginImage}
+                  zoomEnabled={true}
                   extractImageEnabled={extractNewImageEnabled}
+                  extractFinished={() => setExtractNewImageFinished(true)}
                 />
               )}
 
@@ -462,6 +491,7 @@ export function ViewController(props) {
                     sourceType={'Origin'}
                     transparentEnabled={currentControlStep < CONTROL_STEP.PREVIEW}
                     extractImageEnabled={extractOriginImageEnabled}
+                    extractFinished={() => setExtractOriginImageFinished(true)}
                   />
                 </View>
               )}
