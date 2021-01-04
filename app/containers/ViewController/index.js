@@ -398,8 +398,6 @@ export function ViewController(props) {
     };
 
     launchImageLibrary(options, (res) => {
-      console.log('Response = ', res);
-
       if (res.didCancel) {
         console.log('User cancelled image picker');
       } else if (res.error) {

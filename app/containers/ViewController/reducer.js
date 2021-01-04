@@ -37,7 +37,6 @@ const ControllerReducer = (state = initialState, action) =>
         draft.selected = action.uri;
         break;
       case UPDATE_CONTROL_IMAGE:
-        console.log('action = ', action);
         const { image, type } = action.data;
         if (type === 'New') {
           draft.newImage = image;

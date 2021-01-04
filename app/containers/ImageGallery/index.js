@@ -30,7 +30,6 @@ export function ImageGallery(props) {
 
   const handlerSelectImage = useCallback(
     (imageUri) => {
-      console.log('[handlerSelectImage] image = ', imageUri);
       dispatch(selectImage(imageUri));
       props.navigation.navigate('GalleryImagePreview');
     },

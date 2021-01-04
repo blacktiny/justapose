@@ -45,7 +45,6 @@ export function MixBlendImagePreview(props) {
       srcImage: renderNewImage(),
       srcTransform: { scale: 'COVER', rotate: `${newImage.rotate}deg` },
       onExtractImage: ({ nativeEvent }) => {
-        console.log('nativeEvent = ', nativeEvent);
         onExtractImage(nativeEvent.uri);
       },
       extractImageEnabled: extractImageEnabled,
