@@ -178,7 +178,8 @@ export function ViewController(props) {
   useEffect(() => {
     if (extractNewImageEnabled || extractOriginImageEnabled) {
       if (
-        ((extractNewImageEnabled && extractNewImageFinished) || (!extractNewImageEnabled && !extractNewImageFinished)) &&
+        ((extractNewImageEnabled && extractNewImageFinished) ||
+          (!extractNewImageEnabled && !extractNewImageFinished)) &&
         ((extractOriginImageEnabled && extractOriginImageFinished) ||
           (!extractOriginImageEnabled && !extractOriginImageFinished))
       ) {
