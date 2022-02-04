@@ -237,21 +237,21 @@ PODS:
     - React-cxxreact (= 0.63.2)
     - React-jsi (= 0.63.2)
   - React-jsinspector (0.63.2)
-  - react-native-camera (3.40.0):
+  - react-native-camera (4.2.1):
     - React-Core
-    - react-native-camera/RCT (= 3.40.0)
-    - react-native-camera/RN (= 3.40.0)
-  - react-native-camera/RCT (3.40.0):
+    - react-native-camera/RCT (= 4.2.1)
+    - react-native-camera/RN (= 4.2.1)
+  - react-native-camera/RCT (4.2.1):
     - React-Core
-  - react-native-camera/RN (3.40.0):
+  - react-native-camera/RN (4.2.1):
     - React-Core
-  - react-native-image-filter-kit (0.7.3):
+  - react-native-image-filter-kit (0.7.7):
     - Bolts/Tasks (= 1.9.0)
     - React
-  - react-native-image-picker (3.1.1):
-    - React
-  - react-native-safe-area-context (3.1.4):
-    - React
+  - react-native-image-picker (3.8.1):
+    - React-Core
+  - react-native-safe-area-context (3.3.2):
+    - React-Core
   - react-native-view-shot (3.1.2):
     - React
   - React-RCTActionSheet (0.63.2):
@@ -314,22 +314,22 @@ PODS:
     - React-Core (= 0.63.2)
     - React-cxxreact (= 0.63.2)
     - React-jsi (= 0.63.2)
-  - RNCAsyncStorage (1.13.2):
-    - React
-  - RNCCheckbox (0.5.6):
+  - RNCAsyncStorage (1.15.17):
     - React-Core
-  - RNCMaskedView (0.1.10):
+  - RNCCheckbox (0.5.9):
+    - React-Core
+  - RNCMaskedView (0.1.11):
     - React
-  - RNCPicker (1.6.6):
+  - RNCPicker (1.8.1):
+    - React-Core
+  - RNFS (2.18.0):
     - React
-  - RNFS (2.16.6):
-    - React
-  - RNGestureHandler (1.7.0):
-    - React
-  - RNReanimated (1.13.0):
-    - React
-  - RNScreens (2.10.1):
-    - React
+  - RNGestureHandler (1.10.3):
+    - React-Core
+  - RNReanimated (1.13.3):
+    - React-Core
+  - RNScreens (2.18.1):
+    - React-Core
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
     - Yoga (~> 1.14)
@@ -520,10 +520,10 @@ SPEC CHECKSUMS:
   React-jsi: 54245e1d5f4b690dec614a73a3795964eeef13a8
   React-jsiexecutor: 8ca588cc921e70590820ce72b8789b02c67cce38
   React-jsinspector: b14e62ebe7a66e9231e9581279909f2fc3db6606
-  react-native-camera: 5c1fbfecf63b802b8ca4a71c60d30a71550fb348
-  react-native-image-filter-kit: 2047cc603ee1b0e506a7b569ce174a7de6a5db15
-  react-native-image-picker: 510ea4e35cbe99ec92ecd89e9449e7e149c930e6
-  react-native-safe-area-context: 0ed9288ed4409beabb0817b54efc047286fc84da
+  react-native-camera: 210a872c84d3aa0982a9223047ef9e743ed694fa
+  react-native-image-filter-kit: 51522589d361e7308814833cb78a833489fda169
+  react-native-image-picker: 5a7dd93d4f9dd0d910da5dde3707fd96f70d03b3
+  react-native-safe-area-context: 5cf05f49df9d17261e40e518481f2e334c6cd4b5
   react-native-view-shot: 08c46c9e8e92f6681e8f2ffa55ac3d06e7e99070
   React-RCTActionSheet: 910163b6b09685a35c4ebbc52b66d1bfbbe39fc5
   React-RCTAnimation: 9a883bbe1e9d2e158d4fb53765ed64c8dc2200c6
@@ -535,17 +535,17 @@ SPEC CHECKSUMS:
   React-RCTText: 1b6773e776e4b33f90468c20fe3b16ca3e224bb8
   React-RCTVibration: 4d2e726957f4087449739b595f107c0d4b6c2d2d
   ReactCommon: a0a1edbebcac5e91338371b72ffc66aa822792ce
-  RNCAsyncStorage: bc2f81cc1df90c267ce9ed30bb2dbc93b945a8ee
-  RNCCheckbox: 0fa612ce146445b80efde233dab96602faf67d31
-  RNCMaskedView: f5c7d14d6847b7b44853f7acb6284c1da30a3459
-  RNCPicker: 494015f2b7ec4bee5484b6f235aa19691426dcdb
-  RNFS: 2bd9eb49dc82fa9676382f0585b992c424cd59df
-  RNGestureHandler: b6b359bb800ae399a9c8b27032bdbf7c18f08a08
-  RNReanimated: 89f5e0a04d1dd52fbf27e7e7030d8f80a646a3fc
-  RNScreens: b748efec66e095134c7166ca333b628cd7e6f3e2
+  RNCAsyncStorage: 105173940b40e85e274023966567ac11b7683cf8
+  RNCCheckbox: 7e2cd6ea8e200210c36fe0898bbe200826bdaf56
+  RNCMaskedView: f127cd9652acfa31b91dcff613e07ba18b774db6
+  RNCPicker: 914b557e20b3b8317b084aca9ff4b4edb95f61e4
+  RNFS: 3ab21fa6c56d65566d1fb26c2228e2b6132e5e32
+  RNGestureHandler: a479ebd5ed4221a810967000735517df0d2db211
+  RNReanimated: 514a11da3a2bcc6c3dfd9de32b38e2b9bf101926
+  RNScreens: f7ad633b2e0190b77b6a7aab7f914fad6f198d8d
   Yoga: 7740b94929bbacbddda59bf115b5317e9a161598
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
 PODFILE CHECKSUM: 537ebc7f298bd32acaabdb43eaf0c7c9264c685c
 
-COCOAPODS: 1.10.0
+COCOAPODS: 1.11.2
