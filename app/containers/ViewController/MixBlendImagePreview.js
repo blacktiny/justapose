@@ -22,7 +22,7 @@ import {
   PlusBlend,
   SaturationBlend,
   ScreenBlend,
-  SoftLightBlend,
+  // SoftLightBlend,
 } from 'react-native-image-filter-kit';
 import { useSelector } from 'react-redux';
 
@@ -62,14 +62,15 @@ export function MixBlendImagePreview(props) {
         resizeMode="cover"
         style={{
           ...styles.imagePreview,
-          opacity: originImage.opacity,
+          opacity: originImage.transparency,
+          transform: [{ rotate: `${originImage.rotate}deg` }],
         }}
       />
     );
   };
 
   const renderNewImage = (position = 'relative') => {
-    if (!originImage.uri) {
+    if (!newImage.uri) {
       return <View />;
     }
 
@@ -77,15 +78,20 @@ export function MixBlendImagePreview(props) {
       <Image
         source={{ isStatic: true, uri: newImage.uri }}
         resizeMode="cover"
-        style={{ ...styles.imagePreview, position }}
+        style={{
+          ...styles.imagePreview,
+          position,
+          opacity: newImage.transparency,
+          transform: [{ rotate: `${newImage.rotate}deg` }],
+        }}
       />
     );
   };
 
   const renderImageFilter = () => {
     switch (blendMode.mode) {
-      case BLEND_MODE_TYPES.BLEND_NORMAL:
-        return <SoftLightBlend {...getOptions()} />;
+      // case BLEND_MODE_TYPES.BLEND_NORMAL:
+      //   return <SoftLightBlend {...getOptions()} />;
       case BLEND_MODE_TYPES.BLEND_MULTIPLY:
         return <MultiplyBlend {...getOptions()} />;
       case BLEND_MODE_TYPES.BLEND_COLOR_BURN:

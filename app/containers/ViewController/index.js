@@ -490,28 +490,28 @@ export function ViewController(props) {
               style={{ marginTop: isShowCameraPreview ? 0 : isShowCheckbox ? 10 : 30 }}
               options={{ format: 'jpg', quality: 0.9 }}>
               {/*   Bottom Image Preview   */}
-              {isShowNewImage && (
+              {isShowOriginImage && (
                 <ImagePreview
-                  sourceType={'New'}
-                  transparentEnabled={originImage.uri !== '' && !isShowOriginImage}
+                  sourceType={'Origin'}
+                  transparentEnabled={originImage.uri !== '' && !isShowNewImage}
                   zoomEnabled={currentControlStep < CONTROL_STEP.PREVIEW}
-                  extractImageEnabled={extractNewImageEnabled}
-                  extractFinished={() => setExtractNewImageFinished(true)}
+                  extractImageEnabled={extractOriginImageEnabled}
+                  extractFinished={() => setExtractOriginImageFinished(true)}
                 />
               )}
 
-              {isShowOriginImage && (
+              {isShowNewImage && (
                 <View
                   style={{
                     display: newImageEditable ? 'none' : 'flex',
-                    marginTop: isShowCameraPreview || isShowNewImage ? -(deviceWitdh - 30) : 0,
+                    marginTop: isShowCameraPreview || isShowOriginImage ? -(deviceWitdh - 30) : 0,
                   }}>
                   {/*   Top Image Preview   */}
                   <ImagePreview
-                    sourceType={'Origin'}
+                    sourceType={'New'}
                     transparentEnabled={currentControlStep < CONTROL_STEP.PREVIEW}
-                    extractImageEnabled={extractOriginImageEnabled}
-                    extractFinished={() => setExtractOriginImageFinished(true)}
+                    extractImageEnabled={extractNewImageEnabled}
+                    extractFinished={() => setExtractNewImageFinished(true)}
                   />
                 </View>
               )}
